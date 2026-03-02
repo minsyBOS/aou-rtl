@@ -1,0 +1,47 @@
+# Copyright Information
+
+## Project Copyright
+
+This project uses a distributed copyright model. Each contributor 
+retains copyright over their contributions while licensing them 
+under the Apache License 2.0.
+
+## Copyright Holders
+
+The following organizations and individuals hold copyright in 
+portions of this codebase:
+
+### Organizations
+
+| Organization      | Primary Contribution Areas | Years Active |
+|-------------------|----------------------------|--------------|
+| BOS Semiconductor | Core RTL                   | 2025-        |
+| Tenstorrent       | Architecture, Distribution,| 2025-        |
+|                   | testing, interfacing       |              |
+
+### Individual Contributors
+
+See [CONTRIBUTORS.md](CONTRIBUTORS.md) for a complete list.
+
+## License
+
+All contributions are licensed under the Apache License, Version 2.0.
+See [LICENSE](LICENSE) for the full license text.
+
+## Source File Headers
+
+All source files should include the following header:
+
+    // Copyright [Year] The [Project Name] Authors
+    // SPDX-License-Identifier: Apache-2.0
+
+## Adding Copyright
+
+When making substantial contributions, you may add your name or 
+organization to the CONTRIBUTORS.md file. Do not modify existing 
+copyright headers in files unless you are the original author.
+
+## Third-Party Code
+
+Third-party code included in this repository is listed in the 
+[NOTICE](NOTICE) file with its respective license information.
