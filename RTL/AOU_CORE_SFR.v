@@ -1474,9 +1474,9 @@ assign O_WRITE_EARLY_RESPONSE_RP3_EARLY_BRESP_EN = r_write_early_response_rp3_ea
 assign O_AXI_ERROR_INFO0_RP3_DEBUG_UPPER_ADDR = r_axi_error_info0_rp3_debug_upper_addr;
 assign O_AXI_ERROR_INFO1_RP3_DEBUG_LOWER_ADDR = r_axi_error_info1_rp3_debug_lower_addr;
 assign O_AXI_SLV_ID_MISMATCH_RP0_EN = r_axi_slv_id_mismatch_rp0_en; 
-assign O_AXI_SLV_ID_MISMATCH_RP1_EN = r_axi_slv_id_mismatch_rp0_en;
-assign O_AXI_SLV_ID_MISMATCH_RP2_EN = r_axi_slv_id_mismatch_rp0_en;
-assign O_AXI_SLV_ID_MISMATCH_RP3_EN = r_axi_slv_id_mismatch_rp0_en;
+assign O_AXI_SLV_ID_MISMATCH_RP1_EN = r_axi_slv_id_mismatch_rp1_en;
+assign O_AXI_SLV_ID_MISMATCH_RP2_EN = r_axi_slv_id_mismatch_rp2_en;
+assign O_AXI_SLV_ID_MISMATCH_RP3_EN = r_axi_slv_id_mismatch_rp3_en;
 
 assign O_SPLIT_BID_MISMATCH_ERROR = r_error_info_rp0_split_bid_mismatch_err | r_error_info_rp1_split_bid_mismatch_err | r_error_info_rp2_split_bid_mismatch_err | r_error_info_rp3_split_bid_mismatch_err;
 assign O_RID_MISMATCH_ERROR = r_error_info_rp0_rid_mismatch_err | r_error_info_rp1_rid_mismatch_err | r_error_info_rp2_rid_mismatch_err | r_error_info_rp3_rid_mismatch_err;

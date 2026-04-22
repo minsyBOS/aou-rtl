@@ -297,7 +297,7 @@ assign O_SLV_AXI_R_BLOCK        = w_slv_axi_mismatch_r_err ;
 assign O_SLV_AXI_B_BLOCK        = w_slv_axi_mismatch_w_err ; 
 
 assign O_AW_HOLD_FLAG           = (r_awcnt == WR_MO_CNT);
-assign O_W_HOLD_FLAG            = (r_awcnt == WR_MO_CNT);
+assign O_W_HOLD_FLAG            = (r_wcnt  == WR_MO_CNT);
 assign O_AR_HOLD_FLAG           = (r_arcnt == RD_MO_CNT);
 
 endmodule

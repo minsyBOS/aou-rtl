@@ -26,7 +26,7 @@
 `timescale 1ns/1ps
 
 module AOU_TX_CORE_OUT_MUX #(
-    FDI_IF_WD = 512
+    parameter int FDI_IF_WD = 512
 )   
 ( 
     input                                   I_CLK,
