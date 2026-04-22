@@ -51,6 +51,7 @@ module AOU_EARLY_TABLE #(
     output logic                                O_EarlyResponse_Valid,
     output logic  [AXI_ID_WD-1:0]               O_EarlyResponse_Id,
 
+    input  logic                                I_EarlyResponse_NonStop,
     output logic                                O_DEST_TABLE_ID_ERR
 );
 
@@ -82,6 +83,9 @@ logic [WR_MO_IDX_WD  -1 :0]         w_early_resp_idx;
 logic [WR_MO_CNT-1:0]               w_wr_same_id_match_flag;
 logic                               w_early_resp_flag;
 logic [WR_MO_IDX_WD-1:0]            w_same_id_tr_cnt;
+
+logic [WR_MO_IDX_WD  -1 :0]         r_early_resp_idx;
+logic                               r_early_resp_idx_hold;
 
 assign O_AW_Slot_Available_Flag = (r_awcnt != WR_MO_CNT);
 
@@ -229,21 +233,36 @@ always_comb begin
     w_same_id_tr_cnt = $countones(w_wr_same_id_match_flag);
 end
 
+always_ff @ (posedge I_CLK or negedge I_RESETN) begin
+    if(~I_RESETN) begin
+        r_early_resp_idx  <= '0;
+        r_early_resp_idx_hold <= '0;
+    end else if (!r_early_resp_idx_hold && O_EarlyResponse_Valid && !I_AXI_S_BReady)begin
+        r_early_resp_idx  <= w_early_resp_idx;
+        r_early_resp_idx_hold <= 1'b1;
+    end else if (r_early_resp_idx_hold && O_EarlyResponse_Valid && I_AXI_S_BReady) begin
+        r_early_resp_idx  <= '0;
+        r_early_resp_idx_hold <= 1'b0;  
+    end
+end
+
 always_comb begin
-    w_early_resp_idx = 'd0;
-    w_early_resp_flag = 'd0;
+    w_early_resp_idx = r_early_resp_idx;
+    w_early_resp_flag = r_early_resp_idx_hold;
+    if (~r_early_resp_idx_hold) begin
     for(integer i = 0; i < WR_MO_CNT ; i = i + 1) begin
         if((awtable[i].pending) & (awtable[i].bufferable) & (~awtable[i].out) & (awtable[i].early_go)) begin
             w_early_resp_flag= 1'b1;
             w_early_resp_idx = i;
         end
     end
+    end
 end
 
 //------------------------------------------------------------------
 assign O_EarlyResponse_Consume = awtable[w_awtable_rptr_cur].bufferable;
 assign O_EarlyResponse_Id  = awtable[w_early_resp_idx].id;
-assign O_EarlyResponse_Valid = w_early_resp_flag;
+assign O_EarlyResponse_Valid    = I_EarlyResponse_NonStop ? w_early_resp_flag : 1'b0;
 //------------------------------------------------------------------
 assign O_DEST_TABLE_ID_ERR = (~(|w_awtable_r_onehot) & I_AXI_M_BValid & I_AXI_M_BReady);
 //------------------------------------------------------------------
