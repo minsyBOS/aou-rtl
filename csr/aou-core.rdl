@@ -195,7 +195,7 @@ addrmap aou_core {
         field { sw = r; } reserved_31_18[31:18] = 0;
         field { sw = rw; hw = w; onwrite = woclr; desc = "Write-transaction watchdog expired for RP0: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked."; } wdt_trans_timeout_err[17:17] = 0;
         field { sw = rw; desc = "Enable the early-response write-transaction watchdog for RP0."; } wdt_en[16:16] = 0;
-        field { sw = rw; desc = "Return the early write response for every write on RP0, regardless of AWCACHE[0] (Bufferable)."; } early_always_en[15:15] = 0;
+        field { sw = rw; desc = "Return the early write response for every non-exclusive write on RP0, regardless of AWCACHE[0] (Bufferable). Exclusive writes (AWLOCK = 1) never receive an early response."; } early_always_en[15:15] = 0;
         field { sw = r; hw = w; desc = "Write response completion status for RP0. Read-only, driven by HW."; } write_resp_done[14:14];
         field { sw = rw; hw = w; onwrite = woclr; desc = "Early write response error for RP0. Set by HW, write 1 to clear."; } write_resp_err[13:13] = 0;
         field { sw = r; hw = rw; desc = "Captured BRESP type when early write response error occurs. Clears when error clears."; } write_resp_err_type_info[12:11];
@@ -258,7 +258,7 @@ addrmap aou_core {
         field { sw = r; } reserved_31_18[31:18] = 0;
         field { sw = rw; hw = w; onwrite = woclr; desc = "Write-transaction watchdog expired for RP1: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked."; } wdt_trans_timeout_err[17:17] = 0;
         field { sw = rw; desc = "Enable the early-response write-transaction watchdog for RP1."; } wdt_en[16:16] = 0;
-        field { sw = rw; desc = "Return the early write response for every write on RP1, regardless of AWCACHE[0] (Bufferable)."; } early_always_en[15:15] = 0;
+        field { sw = rw; desc = "Return the early write response for every non-exclusive write on RP1, regardless of AWCACHE[0] (Bufferable). Exclusive writes (AWLOCK = 1) never receive an early response."; } early_always_en[15:15] = 0;
         field { sw = r; hw = w; desc = "Write response completion status for RP1. Read-only, driven by HW."; } write_resp_done[14:14];
         field { sw = rw; hw = w; onwrite = woclr; desc = "Early write response error for RP1. Set by HW, write 1 to clear."; } write_resp_err[13:13] = 0;
         field { sw = r; hw = rw; desc = "Captured BRESP type when early write response error occurs. Clears when error clears."; } write_resp_err_type_info[12:11];
@@ -321,7 +321,7 @@ addrmap aou_core {
         field { sw = r; } reserved_31_18[31:18] = 0;
         field { sw = rw; hw = w; onwrite = woclr; desc = "Write-transaction watchdog expired for RP2: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked."; } wdt_trans_timeout_err[17:17] = 0;
         field { sw = rw; desc = "Enable the early-response write-transaction watchdog for RP2."; } wdt_en[16:16] = 0;
-        field { sw = rw; desc = "Return the early write response for every write on RP2, regardless of AWCACHE[0] (Bufferable)."; } early_always_en[15:15] = 0;
+        field { sw = rw; desc = "Return the early write response for every non-exclusive write on RP2, regardless of AWCACHE[0] (Bufferable). Exclusive writes (AWLOCK = 1) never receive an early response."; } early_always_en[15:15] = 0;
         field { sw = r; hw = w; desc = "Write response completion status for RP2. Read-only, driven by HW."; } write_resp_done[14:14];
         field { sw = rw; hw = w; onwrite = woclr; desc = "Early write response error for RP2. Set by HW, write 1 to clear."; } write_resp_err[13:13] = 0;
         field { sw = r; hw = rw; desc = "Captured BRESP type when early write response error occurs. Clears when error clears."; } write_resp_err_type_info[12:11];
@@ -384,7 +384,7 @@ addrmap aou_core {
         field { sw = r; } reserved_31_18[31:18] = 0;
         field { sw = rw; hw = w; onwrite = woclr; desc = "Write-transaction watchdog expired for RP3: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked."; } wdt_trans_timeout_err[17:17] = 0;
         field { sw = rw; desc = "Enable the early-response write-transaction watchdog for RP3."; } wdt_en[16:16] = 0;
-        field { sw = rw; desc = "Return the early write response for every write on RP3, regardless of AWCACHE[0] (Bufferable)."; } early_always_en[15:15] = 0;
+        field { sw = rw; desc = "Return the early write response for every non-exclusive write on RP3, regardless of AWCACHE[0] (Bufferable). Exclusive writes (AWLOCK = 1) never receive an early response."; } early_always_en[15:15] = 0;
         field { sw = r; hw = w; desc = "Write response completion status for RP3. Read-only, driven by HW."; } write_resp_done[14:14];
         field { sw = rw; hw = w; onwrite = woclr; desc = "Early write response error for RP3. Set by HW, write 1 to clear."; } write_resp_err[13:13] = 0;
         field { sw = r; hw = rw; desc = "Captured BRESP type when early write response error occurs. Clears when error clears."; } write_resp_err_type_info[12:11];

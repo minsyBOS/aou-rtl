@@ -275,8 +275,8 @@ The DISABLED signal is asserted to indicate that deactivation has been completed
 *WRITE_EARLY_RESPONSE*
 
 * For the EARLY_RESPONSE_EN or EARLY_ALWAYS_EN SFR setting to enable or disable early response, there must be no pending write requests (WRITE_RESP_DONE = 1).
-* EARLY_RESPONSE_EN: If this field is set(1), It performs the early response function for bufferable writes (AWCACHE[0] = 1).
-* EARLY_ALWAYS_EN: If this field is set(1) together with EARLY_RESPONSE_EN, every write receives the early response regardless of AWCACHE[0].
+* EARLY_RESPONSE_EN: If this field is set(1), It performs the early response function for bufferable writes (AWCACHE[0] = 1). Exclusive writes (AWLOCK = 1) never receive an early response.
+* EARLY_ALWAYS_EN: If this field is set(1) together with EARLY_RESPONSE_EN, every non-exclusive write receives the early response regardless of AWCACHE[0].
 * WDT_EN / WRITE_EARLY_RESPONSE_WDT_CTL.WDT_THRESHOLD: enable and threshold of the write-transaction watchdog; see xref:aou-726-write-transaction-watchdog[Section 7.2.6].
 * WDT_TRANS_TIMEOUT_ERR: set when the watchdog of this RP expires; source of the INT_EARLY_WDT_ERR interrupt. Writing 1 clears it.
 * WRITE_RESP_DONE: It indicates that there are no pending write requests and all write responses have been received from the remote die.

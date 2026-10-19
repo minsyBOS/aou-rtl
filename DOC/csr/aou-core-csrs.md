@@ -520,7 +520,7 @@ Don't override. Generated from: aou_core
 
 #### early_always_en field
 
-<p>Return the early write response for every write on RP0, regardless of AWCACHE[0] (Bufferable).</p>
+<p>Return the early write response for every non-exclusive write on RP0, regardless of AWCACHE[0] (Bufferable). Exclusive writes (AWLOCK = 1) never receive an early response.</p>
 
 #### wdt_en field
 
@@ -690,7 +690,7 @@ Don't override. Generated from: aou_core
 
 #### early_always_en field
 
-<p>Return the early write response for every write on RP1, regardless of AWCACHE[0] (Bufferable).</p>
+<p>Return the early write response for every non-exclusive write on RP1, regardless of AWCACHE[0] (Bufferable). Exclusive writes (AWLOCK = 1) never receive an early response.</p>
 
 #### wdt_en field
 
@@ -860,7 +860,7 @@ Don't override. Generated from: aou_core
 
 #### early_always_en field
 
-<p>Return the early write response for every write on RP2, regardless of AWCACHE[0] (Bufferable).</p>
+<p>Return the early write response for every non-exclusive write on RP2, regardless of AWCACHE[0] (Bufferable). Exclusive writes (AWLOCK = 1) never receive an early response.</p>
 
 #### wdt_en field
 
@@ -1030,7 +1030,7 @@ Don't override. Generated from: aou_core
 
 #### early_always_en field
 
-<p>Return the early write response for every write on RP3, regardless of AWCACHE[0] (Bufferable).</p>
+<p>Return the early write response for every non-exclusive write on RP3, regardless of AWCACHE[0] (Bufferable). Exclusive writes (AWLOCK = 1) never receive an early response.</p>
 
 #### wdt_en field
 

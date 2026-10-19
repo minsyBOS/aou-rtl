@@ -255,7 +255,7 @@ The [.monospaced]#++AOU_EARLY_BRESP_CTRL_AWCACHE++# module sits between the loca
 
 When enabled, the module returns an early B response ([.monospaced]#++BRESP = OKAY++#) to the local AXI manager as soon as both the write address (AW) and the last write data beat (W with WLAST) have been received at the AXI subordinate port \-- before the write is packed into AoU messages, transmitted over FDI, and completed on the remote die. This reduces the write latency seen by the local requester at the cost of deferred error reporting.
 
-Early response applies only to *bufferable* writes ([.monospaced]#++AWCACHE[0] = 1++#), or to every write when [.monospaced]#++WRITE_EARLY_RESPONSE_RPn.EARLY_ALWAYS_EN++# is set: the controller treats a write as bufferable when [.monospaced]#++AWCACHE[0] = 1++# *or* [.monospaced]#++EARLY_ALWAYS_EN = 1++#. Writes that are not bufferable by this definition pass through the module unchanged: the AW, W, and B channels are forwarded directly between the local AXI interface and the AOU TX datapath with no early response generated, and the actual BRESP from the remote die is returned to the local AXI manager as normal. [.monospaced]#++AWLOCK++# is not considered; an exclusive write that is bufferable by this definition receives an early OKAY.
+Early response applies only to *bufferable* writes ([.monospaced]#++AWCACHE[0] = 1++#), or to every write when [.monospaced]#++WRITE_EARLY_RESPONSE_RPn.EARLY_ALWAYS_EN++# is set: the controller treats a write as bufferable when [.monospaced]#++AWCACHE[0] = 1++# *or* [.monospaced]#++EARLY_ALWAYS_EN = 1++#. Writes that are not bufferable by this definition pass through the module unchanged: the AW, W, and B channels are forwarded directly between the local AXI interface and the AOU TX datapath with no early response generated, and the actual BRESP from the remote die is returned to the local AXI manager as normal. Exclusive writes ([.monospaced]#++AWLOCK = 1++#) are never answered early, whatever [.monospaced]#++AWCACHE[0]++# and [.monospaced]#++EARLY_ALWAYS_EN++# say: only the remote subordinate can decide between EXOKAY and OKAY, so an exclusive write always passes through and returns the remote die's actual BRESP.
 
 [[aou-372-transaction-flow----normal-case]]
 ==== 3.7.2. Transaction Flow \-- Normal Case
@@ -288,7 +288,7 @@ The [.monospaced]#++AOU_EARLY_TABLE++# inside the controller maintains a trackin
 |=======================================================================================================================================
 |Field |Purpose
 |[.monospaced]#++id++# |AXI write ID ([.monospaced]#++AWID++#)
-|[.monospaced]#++bufferable++# |[.monospaced]#++AWCACHE[0] OR EARLY_ALWAYS_EN++# flag
+|[.monospaced]#++bufferable++# |[.monospaced]#++(AWCACHE[0] OR EARLY_ALWAYS_EN) AND NOT AWLOCK++# flag
 |[.monospaced]#++pending++# |Transaction is in flight (AW accepted, B not yet received from remote)
 |[.monospaced]#++same_id_tr_cnt++# |Count of older pending transactions with the same AXI ID that have not yet been early-responded or actually responded
 |[.monospaced]#++early_go++# |Set when [.monospaced]#++same_id_tr_cnt++# reaches 0, indicating this entry is eligible for early response
@@ -365,7 +365,7 @@ The [.monospaced]#++WRITE_EARLY_RESPONSE_RPn++# register (one per RP: RP0 at [.m
 [width="100%",cols="<25%,<25%,<25%,<25%",options="header",]
 |==============================================================================================
 |Field |Bits |Access |Description
-|EARLY_BRESP_EN |[0] |RW |Enable early B response for bufferable writes on this RP.
+|EARLY_BRESP_EN |[0] |RW |Enable early B response for bufferable, non-exclusive writes on this RP.
 |WRITE_RESP_ERR_ID_INFO |[10:1] |RO |AXI ID of the transaction whose actual BRESP had an error.
 |WRITE_RESP_ERR_TYPE_INFO |[12:11] |RO |BRESP error type (2pass:[']b10 = SLVERR, 2pass:[']b11 = DECERR).
 |WRITE_RESP_ERR |[13] |W1C |Write 1 to clear the [.monospaced]#++INT_EARLY_RESP_ERR++# interrupt.
