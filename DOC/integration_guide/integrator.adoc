@@ -303,12 +303,7 @@ for timing closure.
 [.monospaced]#++AOU_TX_CORE++#. 0: each FDI chunk is driven combinationally from the
 granule ring and the current packing state. 1: the chunk is computed from the
 look-ahead (next) packing state and ring contents and registered before the
-FDI output mux, so the FDI TX data leaves a register and the ring-to-FDI path
-is shortened; the AXI-input-to-ring-to-register path grows by the packing mux.
-The two are cycle-equivalent: the register is a retiming, and every FDI beat
-(data, valid, handshake) is identical in both settings, so the latency in
-MAS Table 8 holds for either value. Measured on the UVM bench
-([.monospaced]#++1x512-sp64++# against [.monospaced]#++1x512-sp64-nxt++#).
+FDI output mux, so the FDI TX data leaves a register.
 
 |M_RD_MO_CNT |parameter |32 |Master read outstanding count.
 
