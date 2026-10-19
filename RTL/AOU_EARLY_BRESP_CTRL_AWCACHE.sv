@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // *****************************************************************************
 //  Copyright (c) 2026 BOS Semiconductors
+//  Copyright (c) 2026 Tenstorrent USA Inc
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -120,6 +121,7 @@ logic                           w_aw_cnt_fifo_mvalid;
 
 logic   [AXI_ID_WD-1:0]         w_awid;
 logic                           w_bufferable_flag;
+logic                           w_aw_early_eligible;
 logic                           r_early_bresp_en;
 
 logic                           w_early_table_available_flag;
@@ -177,9 +179,15 @@ always_ff @ (posedge I_CLK or negedge I_RESETN) begin
     end
 end
 
+// A write is answered early when it is bufferable (AWCACHE[0]) or EARLY_ALWAYS_EN
+// is set. Exclusive writes (AWLOCK) are never answered early: only the remote
+// subordinate can decide EXOKAY/OKAY, and an early OKAY would report the
+// exclusive as failed while the remote die may still perform it (issue #91).
+assign w_aw_early_eligible      = (I_AXI_S_AWCACHE[0] || I_EARLY_BRESP_ALWAYS_EN) && ~I_AXI_S_AWLOCK;
+
 assign w_bypass                 = ~w_aw_cnt_fifo_mvalid & w_aw_hs & w_w_last_hs;
 assign w_table_awid             = w_aw_cnt_fifo_mvalid ? w_awid             : I_AXI_S_AWID;
-assign w_table_bufferable_flag  = w_aw_cnt_fifo_mvalid ? w_bufferable_flag  : (I_AXI_S_AWCACHE[0] || I_EARLY_BRESP_ALWAYS_EN);
+assign w_table_bufferable_flag  = w_aw_cnt_fifo_mvalid ? w_bufferable_flag  : w_aw_early_eligible;
 
 AOU_SYNC_FIFO_REG
 #(
@@ -191,7 +199,7 @@ u_aou_aw_cnt(
     .I_RESETN                       ( I_RESETN                                  ),
 
     .I_SVALID                       ( r_early_bresp_en & w_aw_hs & ~w_bypass    ),
-    .I_SDATA                        ( {I_AXI_S_AWID, (I_AXI_S_AWCACHE[0] || I_EARLY_BRESP_ALWAYS_EN)}   ),
+    .I_SDATA                        ( {I_AXI_S_AWID, w_aw_early_eligible}       ),
     .O_SREADY                       ( w_aw_cnt_fifo_sready                      ),
 
     .I_MREADY                       ( w_w_last_hs                               ),
