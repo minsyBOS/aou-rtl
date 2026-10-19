@@ -303,14 +303,9 @@ import packet_def_pkg::*;
     output logic                                        INT_SI0_ID_MISMATCH,
     output logic                                        INT_MI0_ID_MISMATCH,
     output logic                                        INT_EARLY_RESP_ERR,
+    output logic                                        INT_EARLY_WDT_ERR,
     output logic                                        INT_ACTIVATE_START,
     output logic                                        INT_DEACTIVATE_START,
-
-    // ================================================================
-    // Bus quiescence (from external transaction monitors)
-    // ================================================================
-    input  logic                                        I_MST_BUS_CLEANY_COMPLETE,
-    input  logic                                        I_SLV_BUS_CLEANY_COMPLETE,
 
     // ================================================================
     // DFT
@@ -567,12 +562,11 @@ import packet_def_pkg::*;
         .INT_SI0_ID_MISMATCH         ( INT_SI0_ID_MISMATCH           ),
         .INT_MI0_ID_MISMATCH         ( INT_MI0_ID_MISMATCH           ),
         .INT_EARLY_RESP_ERR          ( INT_EARLY_RESP_ERR            ),
+        .INT_EARLY_WDT_ERR           ( INT_EARLY_WDT_ERR             ),
         .INT_ACTIVATE_START          ( w_int_activate_start          ),
         .INT_DEACTIVATE_START        ( w_int_deactivate_start        ),
 
         .I_INT_FSM_IN_ACTIVE         ( w_int_fsm_in_active           ),
-        .I_MST_BUS_CLEANY_COMPLETE   ( I_MST_BUS_CLEANY_COMPLETE     ),
-        .I_SLV_BUS_CLEANY_COMPLETE   ( I_SLV_BUS_CLEANY_COMPLETE     ),
         .O_AOU_ACTIVATE_ST_DISABLED  ( w_aou_activate_st_disabled    ),
         .O_AOU_ACTIVATE_ST_ENABLED   ( w_aou_activate_st_enabled     ),
         .O_AOU_REQ_LINKRESET         ( w_aou_req_linkreset           ),

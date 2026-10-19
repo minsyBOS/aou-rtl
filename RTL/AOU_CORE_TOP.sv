@@ -307,14 +307,13 @@ import packet_def_pkg::*;
     output                                          INT_MI0_ID_MISMATCH,
 
     output                                          INT_EARLY_RESP_ERR,
+    output                                          INT_EARLY_WDT_ERR,
 
     output                                          INT_ACTIVATE_START,
     output                                          INT_DEACTIVATE_START,
 
     //Interface for UCIE_CORE
     input                                           I_INT_FSM_IN_ACTIVE,
-    input                                           I_MST_BUS_CLEANY_COMPLETE,
-    input                                           I_SLV_BUS_CLEANY_COMPLETE,
     output                                          O_AOU_ACTIVATE_ST_DISABLED,
     output                                          O_AOU_ACTIVATE_ST_ENABLED,
     output                                          O_AOU_REQ_LINKRESET,
@@ -346,6 +345,11 @@ import packet_def_pkg::*;
     localparam  MAX_REQ_COUNT               = 4;
     localparam  MAX_WR_RESP_COUNT           = 12;
     localparam  DATA_DEC_CNT                = 4;
+    //It should be configured to a value greater than the maximum burst length of the local bus.
+    localparam  RP0_AGG_WCH_FIFO_DEPTH      = 16;
+    localparam  RP1_AGG_WCH_FIFO_DEPTH      = 16; 
+    localparam  RP2_AGG_WCH_FIFO_DEPTH      = 16; 
+    localparam  RP3_AGG_WCH_FIFO_DEPTH      = 16;
 //----------------------------------------------------------------------------
     logic                                   w_aou_apb_si0_psel       ;
     logic                                   w_aou_apb_si0_penable    ;
@@ -429,6 +433,7 @@ import packet_def_pkg::*;
     logic                                   w_axi_slv_rid_mismatch_error;
 
     logic                                   w_int_early_resp_err;
+    logic                                   w_int_early_wdt_err;
     logic                                   w_int_activate_start_level;
     logic                                   w_int_deactivate_start_level;
 
@@ -526,6 +531,11 @@ import packet_def_pkg::*;
         .RP1_AXI_DATA_WD            ( RP1_AXI_DATA_WD           ),
         .RP2_AXI_DATA_WD            ( RP2_AXI_DATA_WD           ),
         .RP3_AXI_DATA_WD            ( RP3_AXI_DATA_WD           ),
+
+        .RP0_AGG_WCH_FIFO_DEPTH     ( RP0_AGG_WCH_FIFO_DEPTH    ), 
+        .RP1_AGG_WCH_FIFO_DEPTH     ( RP1_AGG_WCH_FIFO_DEPTH    ), 
+        .RP2_AGG_WCH_FIFO_DEPTH     ( RP2_AGG_WCH_FIFO_DEPTH    ), 
+        .RP3_AGG_WCH_FIFO_DEPTH     ( RP3_AGG_WCH_FIFO_DEPTH    ),
 
         .AXI_PEER_DIE_MAX_DATA_WD   ( AXI_PEER_DIE_MAX_DATA_WD  ),
 
@@ -734,14 +744,13 @@ import packet_def_pkg::*;
         .O_AXI_SLV_RID_MISMATCH_ERROR       ( w_axi_slv_rid_mismatch_error      ),
         .O_AXI_SLV_BID_MISMATCH_ERROR       ( w_axi_slv_bid_mismatch_error      ),
 
-        .O_INT_SLV_EARLY_RESP_ERR           ( w_int_early_resp_err              ),
+        .O_INT_EARLY_RESP_ERR               ( w_int_early_resp_err              ),
+        .O_INT_EARLY_WDT_ERR                ( w_int_early_wdt_err               ),
 
         .O_INT_ACTIVATE_START               ( w_int_activate_start_level        ),
         .O_INT_DEACTIVATE_START             ( w_int_deactivate_start_level      ),
 
         .I_INT_FSM_IN_ACTIVE                ( I_INT_FSM_IN_ACTIVE               ),
-        .I_MST_BUS_CLEANY_COMPLETE          ( I_MST_BUS_CLEANY_COMPLETE         ),
-        .I_SLV_BUS_CLEANY_COMPLETE          ( I_SLV_BUS_CLEANY_COMPLETE         ),
         .O_AOU_ACTIVATE_ST_DISABLED         ( O_AOU_ACTIVATE_ST_DISABLED        ),
         .O_AOU_ACTIVATE_ST_ENABLED          ( O_AOU_ACTIVATE_ST_ENABLED         ),
         .O_AOU_REQ_LINKRESET                ( w_int_aou_req_linkreset           ),

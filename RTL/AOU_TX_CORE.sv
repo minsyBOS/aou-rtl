@@ -347,7 +347,7 @@ logic                           w_misc_activation_valid;
 logic                           w_misc_activation_ready;
 
 logic                           w_aou_tx_axi_hs;
-
+logic    [RP_CNT-1:0]           w_aou_tx_b_fifo_svalid;
 integer unsigned i, j;
 
 logic   w_aou_fifo_ar_hs;
@@ -402,7 +402,9 @@ logic       r_tx_activation_valid;
 typedef logic [FLIT_PACK_STATE_W-1:0] flit_packing_state_t;
 
 flit_packing_state_t r_flit_packing_state;
+`ifdef AOU_TX_NXT_PACKING_EN
 flit_packing_state_t nxt_flit_packing_state;
+`endif
 
 //reg
 logic [40-1:0]                   r_granule_buffer [RING_DEPTH-1:0];          //128 Granule buffer
@@ -571,118 +573,116 @@ AOU_TX_AXI_BUFFER
     .CNT_RP3_R_MAX_CREDIT    ( CNT_RP3_R_MAX_CREDIT  )
 ) u_aou_tx_axi_buffer
 (
-    .I_CLK                                  ( I_CLK                         ),
-    .I_RESETN                               ( I_RESETN                      ),
+    .I_CLK                                  ( I_CLK                             ),
+    .I_RESETN                               ( I_RESETN                          ),
 
     //Interface for RP0
-    .I_AOU_TX_S_AXI_AWID                    ( I_AOU_TX_AXI_AWID             ),
-    .I_AOU_TX_S_AXI_AWADDR                  ( I_AOU_TX_AXI_AWADDR           ),
-    .I_AOU_TX_S_AXI_AWLEN                   ( I_AOU_TX_AXI_AWLEN            ),
-    .I_AOU_TX_S_AXI_AWSIZE                  ( I_AOU_TX_AXI_AWSIZE           ),
-    .I_AOU_TX_S_AXI_AWBURST                 ( I_AOU_TX_AXI_AWBURST          ),
-    .I_AOU_TX_S_AXI_AWLOCK                  ( I_AOU_TX_AXI_AWLOCK           ),
-    .I_AOU_TX_S_AXI_AWCACHE                 ( I_AOU_TX_AXI_AWCACHE          ),
-    .I_AOU_TX_S_AXI_AWPROT                  ( I_AOU_TX_AXI_AWPROT           ),
-    .I_AOU_TX_S_AXI_AWQOS                   ( I_AOU_TX_AXI_AWQOS            ),
-    .I_AOU_TX_S_AXI_AWVALID                 ( I_AOU_TX_AXI_AWVALID          ),
-    .O_AOU_TX_S_AXI_AWREADY                 ( O_AOU_TX_AXI_AWREADY          ),
+    .I_AOU_TX_S_AXI_AWID                    ( I_AOU_TX_AXI_AWID                 ),
+    .I_AOU_TX_S_AXI_AWADDR                  ( I_AOU_TX_AXI_AWADDR               ),
+    .I_AOU_TX_S_AXI_AWLEN                   ( I_AOU_TX_AXI_AWLEN                ),
+    .I_AOU_TX_S_AXI_AWSIZE                  ( I_AOU_TX_AXI_AWSIZE               ),
+    .I_AOU_TX_S_AXI_AWBURST                 ( I_AOU_TX_AXI_AWBURST              ),
+    .I_AOU_TX_S_AXI_AWLOCK                  ( I_AOU_TX_AXI_AWLOCK               ),
+    .I_AOU_TX_S_AXI_AWCACHE                 ( I_AOU_TX_AXI_AWCACHE              ),
+    .I_AOU_TX_S_AXI_AWPROT                  ( I_AOU_TX_AXI_AWPROT               ),
+    .I_AOU_TX_S_AXI_AWQOS                   ( I_AOU_TX_AXI_AWQOS                ),
+    .I_AOU_TX_S_AXI_AWVALID                 ( I_AOU_TX_AXI_AWVALID              ),
+    .O_AOU_TX_S_AXI_AWREADY                 ( O_AOU_TX_AXI_AWREADY              ),
 
-    .I_AOU_TX_S_AXI_WDATA                   ( I_AOU_TX_AXI_WDATA            ),
-    .I_AOU_TX_S_AXI_WSTRB                   ( I_AOU_TX_AXI_WSTRB            ),
-    .I_AOU_TX_S_AXI_WLAST                   ( I_AOU_TX_AXI_WLAST            ),
-    .I_AOU_TX_S_AXI_WVALID                  ( I_AOU_TX_AXI_WVALID           ),
-    .O_AOU_TX_S_AXI_WREADY                  ( O_AOU_TX_AXI_WREADY           ),
+    .I_AOU_TX_S_AXI_WDATA                   ( I_AOU_TX_AXI_WDATA                ),
+    .I_AOU_TX_S_AXI_WSTRB                   ( I_AOU_TX_AXI_WSTRB                ),
+    .I_AOU_TX_S_AXI_WLAST                   ( I_AOU_TX_AXI_WLAST                ),
+    .I_AOU_TX_S_AXI_WVALID                  ( I_AOU_TX_AXI_WVALID               ),
+    .O_AOU_TX_S_AXI_WREADY                  ( O_AOU_TX_AXI_WREADY               ),
 
-    .I_AOU_TX_S_AXI_ARID                    ( I_AOU_TX_AXI_ARID             ),
-    .I_AOU_TX_S_AXI_ARADDR                  ( I_AOU_TX_AXI_ARADDR           ),
-    .I_AOU_TX_S_AXI_ARLEN                   ( I_AOU_TX_AXI_ARLEN            ),
-    .I_AOU_TX_S_AXI_ARSIZE                  ( I_AOU_TX_AXI_ARSIZE           ),
-    .I_AOU_TX_S_AXI_ARBURST                 ( I_AOU_TX_AXI_ARBURST          ),
-    .I_AOU_TX_S_AXI_ARLOCK                  ( I_AOU_TX_AXI_ARLOCK           ),
-    .I_AOU_TX_S_AXI_ARCACHE                 ( I_AOU_TX_AXI_ARCACHE          ),
-    .I_AOU_TX_S_AXI_ARPROT                  ( I_AOU_TX_AXI_ARPROT           ),
-    .I_AOU_TX_S_AXI_ARQOS                   ( I_AOU_TX_AXI_ARQOS            ),
-    .I_AOU_TX_S_AXI_ARVALID                 ( I_AOU_TX_AXI_ARVALID          ),
-    .O_AOU_TX_S_AXI_ARREADY                 ( O_AOU_TX_AXI_ARREADY          ),
+    .I_AOU_TX_S_AXI_ARID                    ( I_AOU_TX_AXI_ARID                 ),
+    .I_AOU_TX_S_AXI_ARADDR                  ( I_AOU_TX_AXI_ARADDR               ),
+    .I_AOU_TX_S_AXI_ARLEN                   ( I_AOU_TX_AXI_ARLEN                ),
+    .I_AOU_TX_S_AXI_ARSIZE                  ( I_AOU_TX_AXI_ARSIZE               ),
+    .I_AOU_TX_S_AXI_ARBURST                 ( I_AOU_TX_AXI_ARBURST              ),
+    .I_AOU_TX_S_AXI_ARLOCK                  ( I_AOU_TX_AXI_ARLOCK               ),
+    .I_AOU_TX_S_AXI_ARCACHE                 ( I_AOU_TX_AXI_ARCACHE              ),
+    .I_AOU_TX_S_AXI_ARPROT                  ( I_AOU_TX_AXI_ARPROT               ),
+    .I_AOU_TX_S_AXI_ARQOS                   ( I_AOU_TX_AXI_ARQOS                ),
+    .I_AOU_TX_S_AXI_ARVALID                 ( I_AOU_TX_AXI_ARVALID              ),
+    .O_AOU_TX_S_AXI_ARREADY                 ( O_AOU_TX_AXI_ARREADY              ),
 
-    .I_AOU_TX_S_AXI_BID_256                 ( I_AOU_TX_AXI_BID_256          ),
-    .I_AOU_TX_S_AXI_BRESP_256               ( I_AOU_TX_AXI_BRESP_256        ),
-    .I_AOU_TX_S_AXI_BVALID_256              ( I_AOU_TX_AXI_BVALID_256       ),
-    .O_AOU_TX_S_AXI_BREADY_256              ( O_AOU_TX_AXI_BREADY_256       ),
+    .I_AOU_TX_S_AXI_BID_256                 ( I_AOU_TX_AXI_BID_256              ),
+    .I_AOU_TX_S_AXI_BRESP_256               ( I_AOU_TX_AXI_BRESP_256            ),
+    .I_AOU_TX_S_AXI_BVALID_256              ( I_AOU_TX_AXI_BVALID_256           ),
+    .O_AOU_TX_S_AXI_BREADY_256              ( O_AOU_TX_AXI_BREADY_256           ),
 
-    .I_AOU_TX_S_AXI_BID_512                 ( I_AOU_TX_AXI_BID_512          ),
-    .I_AOU_TX_S_AXI_BRESP_512               ( I_AOU_TX_AXI_BRESP_512        ),
-    .I_AOU_TX_S_AXI_BVALID_512              ( I_AOU_TX_AXI_BVALID_512       ),
-    .O_AOU_TX_S_AXI_BREADY_512              ( O_AOU_TX_AXI_BREADY_512       ),
+    .I_AOU_TX_S_AXI_BID_512                 ( I_AOU_TX_AXI_BID_512              ),
+    .I_AOU_TX_S_AXI_BRESP_512               ( I_AOU_TX_AXI_BRESP_512            ),
+    .I_AOU_TX_S_AXI_BVALID_512              ( I_AOU_TX_AXI_BVALID_512           ),
+    .O_AOU_TX_S_AXI_BREADY_512              ( O_AOU_TX_AXI_BREADY_512           ),
 
-    .I_AOU_TX_S_AXI_BID_1024                ( I_AOU_TX_AXI_BID_1024         ),
-    .I_AOU_TX_S_AXI_BRESP_1024              ( I_AOU_TX_AXI_BRESP_1024       ),
-    .I_AOU_TX_S_AXI_BVALID_1024             ( I_AOU_TX_AXI_BVALID_1024      ),
-    .O_AOU_TX_S_AXI_BREADY_1024             ( O_AOU_TX_AXI_BREADY_1024      ),
+    .I_AOU_TX_S_AXI_BID_1024                ( I_AOU_TX_AXI_BID_1024             ),
+    .I_AOU_TX_S_AXI_BRESP_1024              ( I_AOU_TX_AXI_BRESP_1024           ),
+    .I_AOU_TX_S_AXI_BVALID_1024             ( I_AOU_TX_AXI_BVALID_1024          ),
+    .O_AOU_TX_S_AXI_BREADY_1024             ( O_AOU_TX_AXI_BREADY_1024          ),
 
-    .I_AOU_TX_S_AXI_RID                     ( I_AOU_TX_AXI_RID              ),
-    .I_AOU_TX_S_AXI_RDLEN                   ( I_AOU_TX_AXI_RDLEN            ),
-    .I_AOU_TX_S_AXI_RDATA                   ( I_AOU_TX_AXI_RDATA            ),
-    .I_AOU_TX_S_AXI_RRESP                   ( I_AOU_TX_AXI_RRESP            ),
-    .I_AOU_TX_S_AXI_RLAST                   ( I_AOU_TX_AXI_RLAST            ),
-    .I_AOU_TX_S_AXI_RVALID                  ( I_AOU_TX_AXI_RVALID           ),
-    .O_AOU_TX_S_AXI_RREADY                  ( O_AOU_TX_AXI_RREADY           ),
+    .I_AOU_TX_S_AXI_RID                     ( I_AOU_TX_AXI_RID                  ),
+    .I_AOU_TX_S_AXI_RDLEN                   ( I_AOU_TX_AXI_RDLEN                ),
+    .I_AOU_TX_S_AXI_RDATA                   ( I_AOU_TX_AXI_RDATA                ),
+    .I_AOU_TX_S_AXI_RRESP                   ( I_AOU_TX_AXI_RRESP                ),
+    .I_AOU_TX_S_AXI_RLAST                   ( I_AOU_TX_AXI_RLAST                ),
+    .I_AOU_TX_S_AXI_RVALID                  ( I_AOU_TX_AXI_RVALID               ),
+    .O_AOU_TX_S_AXI_RREADY                  ( O_AOU_TX_AXI_RREADY               ),
 
 
     //Output
-    .O_AOU_TX_M_AXI_AW_MESSAGE              ( w_aou_tx_m_axi_aw_message     ),
-    .O_AOU_TX_M_AXI_AWVALID                 ( w_aou_fifo_awvalid            ),
-    .I_AOU_TX_M_AXI_AWREADY                 ( w_aou_fifo_awready            ),
+    .O_AOU_TX_M_AXI_AW_MESSAGE              ( w_aou_tx_m_axi_aw_message         ),
+    .O_AOU_TX_M_AXI_AWVALID                 ( w_aou_fifo_awvalid                ),
+    .I_AOU_TX_M_AXI_AWREADY                 ( w_aou_fifo_awready                ),
 
-    .O_AOU_TX_M_AXI_W_RP                    ( w_aou_fifo_w_rp               ),//only w channel rp is source rp
-    .O_AOU_TX_M_AXI_WSTRB_FULL              ( w_aou_fifo_wstrb_full         ),
-    .O_AOU_TX_M_AXI_W_MESSAGE               ( w_aou_tx_m_axi_w_message      ),
-    .O_AOU_TX_M_AXI_WVALID                  ( w_aou_fifo_wvalid             ),
-    .I_AOU_TX_M_AXI_WREADY                  ( w_aou_fifo_wready             ),
+    .O_AOU_TX_M_AXI_W_RP                    ( w_aou_fifo_w_rp                   ),//only w channel rp is source rp
+    .O_AOU_TX_M_AXI_WSTRB_FULL              ( w_aou_fifo_wstrb_full             ),
+    .O_AOU_TX_M_AXI_W_MESSAGE               ( w_aou_tx_m_axi_w_message          ),
+    .O_AOU_TX_M_AXI_WVALID                  ( w_aou_fifo_wvalid                 ),
+    .I_AOU_TX_M_AXI_WREADY                  ( w_aou_fifo_wready                 ),
 
-    .O_AOU_TX_M_AXI_B_MESSAGE               ( w_aou_tx_m_axi_b_message      ),
-    .O_AOU_TX_M_AXI_BVALID                  ( w_aou_fifo_bvalid             ),
-    .I_AOU_TX_M_AXI_BREADY                  ( w_aou_fifo_bready             ),
+    .O_AOU_TX_M_AXI_B_MESSAGE               ( w_aou_tx_m_axi_b_message          ),
+    .O_AOU_TX_M_AXI_BVALID                  ( w_aou_fifo_bvalid                 ),
+    .I_AOU_TX_M_AXI_BREADY                  ( w_aou_fifo_bready                 ),
 
-    .O_AOU_TX_M_AXI_AR_MESSAGE              ( w_aou_tx_m_axi_ar_message     ),
-    .O_AOU_TX_M_AXI_ARVALID                 ( w_aou_fifo_arvalid            ),
-    .I_AOU_TX_M_AXI_ARREADY                 ( w_aou_fifo_arready            ),
+    .O_AOU_TX_M_AXI_AR_MESSAGE              ( w_aou_tx_m_axi_ar_message         ),
+    .O_AOU_TX_M_AXI_ARVALID                 ( w_aou_fifo_arvalid                ),
+    .I_AOU_TX_M_AXI_ARREADY                 ( w_aou_fifo_arready                ),
 
-    .O_AOU_TX_M_AXI_RDLEN                   ( w_aou_fifo_rdlen              ),
-    .O_AOU_TX_M_AXI_R_MESSAGE               ( w_aou_tx_m_axi_r_message      ),
-    .O_AOU_TX_M_AXI_RVALID                  ( w_aou_fifo_rvalid             ),
-    .I_AOU_TX_M_AXI_RREADY                  ( w_aou_fifo_rready             ),
+    .O_AOU_TX_M_AXI_RDLEN                   ( w_aou_fifo_rdlen                  ),
+    .O_AOU_TX_M_AXI_R_MESSAGE               ( w_aou_tx_m_axi_r_message          ),
+    .O_AOU_TX_M_AXI_RVALID                  ( w_aou_fifo_rvalid                 ),
+    .I_AOU_TX_M_AXI_RREADY                  ( w_aou_fifo_rready                 ),
 
-    .I_AOU_TX_WREQCRED                      ( I_AOU_TX_WREQCRED             ),
-    .I_AOU_TX_RREQCRED                      ( I_AOU_TX_RREQCRED             ),
-    .I_AOU_TX_WDATACRED                     ( I_AOU_TX_WDATACRED            ),
-    .I_AOU_TX_RDATACRED                     ( I_AOU_TX_RDATACRED            ),
-    .I_AOU_TX_WRESPCRED                     ( I_AOU_TX_WRESPCRED            ),
+    .I_AOU_TX_WREQCRED                      ( I_AOU_TX_WREQCRED                 ),
+    .I_AOU_TX_RREQCRED                      ( I_AOU_TX_RREQCRED                 ),
+    .I_AOU_TX_WDATACRED                     ( I_AOU_TX_WDATACRED                ),
+    .I_AOU_TX_RDATACRED                     ( I_AOU_TX_RDATACRED                ),
+    .I_AOU_TX_WRESPCRED                     ( I_AOU_TX_WRESPCRED                ),
 
-    .O_AOU_TX_WREQVALID                     ( O_AOU_TX_WREQVALID            ),
-    .O_AOU_TX_RREQVALID                     ( O_AOU_TX_RREQVALID            ),
-    .O_AOU_TX_WDATAVALID                    ( O_AOU_TX_WDATAVALID           ),
-    .O_AOU_TX_WFDATA                        ( O_AOU_TX_WFDATA               ),
-    .O_AOU_TX_RDATAVALID                    ( O_AOU_TX_RDATAVALID           ),
-    .O_AOU_TX_RDATA_DLENGTH                 ( O_AOU_TX_RDATA_DLENGTH        ),
-    .O_AOU_TX_WRESPVALID                    ( O_AOU_TX_WRESPVALID           ),
+    .O_AOU_TX_WREQVALID                     ( O_AOU_TX_WREQVALID                ),
+    .O_AOU_TX_RREQVALID                     ( O_AOU_TX_RREQVALID                ),
+    .O_AOU_TX_WDATAVALID                    ( O_AOU_TX_WDATAVALID               ),
+    .O_AOU_TX_WFDATA                        ( O_AOU_TX_WFDATA                   ),
+    .O_AOU_TX_RDATAVALID                    ( O_AOU_TX_RDATAVALID               ),
+    .O_AOU_TX_RDATA_DLENGTH                 ( O_AOU_TX_RDATA_DLENGTH            ),
+    .O_AOU_TX_WRESPVALID                    ( O_AOU_TX_WRESPVALID               ),
 
-    .I_RP_DEST_RP                           ( I_RP_DEST_RP                  ),
+    .I_RP_DEST_RP                           ( I_RP_DEST_RP                      ),
 
-    .I_PRIOR_RP_AXI_AXI_QOS_TO_NP           (I_PRIOR_RP_AXI_AXI_QOS_TO_NP    ),
-    .I_PRIOR_RP_AXI_AXI_QOS_TO_HP           (I_PRIOR_RP_AXI_AXI_QOS_TO_HP    ),
-    .I_PRIOR_RP_AXI_RP3_PRIOR               (I_PRIOR_RP_AXI_RP3_PRIOR        ),
-    .I_PRIOR_RP_AXI_RP2_PRIOR               (I_PRIOR_RP_AXI_RP2_PRIOR        ),
-    .I_PRIOR_RP_AXI_RP1_PRIOR               (I_PRIOR_RP_AXI_RP1_PRIOR        ),
-    .I_PRIOR_RP_AXI_RP0_PRIOR               (I_PRIOR_RP_AXI_RP0_PRIOR        ),
-    .I_PRIOR_RP_AXI_ARB_MODE                (I_PRIOR_RP_AXI_ARB_MODE         ),
-    .I_PRIOR_TIMER_TIMER_RESOLUTION         (I_PRIOR_TIMER_TIMER_RESOLUTION  ),
-    .I_PRIOR_TIMER_TIMER_THRESHOLD          (I_PRIOR_TIMER_TIMER_THRESHOLD   ),
+    .I_PRIOR_RP_AXI_AXI_QOS_TO_NP           ( I_PRIOR_RP_AXI_AXI_QOS_TO_NP      ),
+    .I_PRIOR_RP_AXI_AXI_QOS_TO_HP           ( I_PRIOR_RP_AXI_AXI_QOS_TO_HP      ),
+    .I_PRIOR_RP_AXI_RP3_PRIOR               ( I_PRIOR_RP_AXI_RP3_PRIOR          ),
+    .I_PRIOR_RP_AXI_RP2_PRIOR               ( I_PRIOR_RP_AXI_RP2_PRIOR          ),
+    .I_PRIOR_RP_AXI_RP1_PRIOR               ( I_PRIOR_RP_AXI_RP1_PRIOR          ),
+    .I_PRIOR_RP_AXI_RP0_PRIOR               ( I_PRIOR_RP_AXI_RP0_PRIOR          ),
+    .I_PRIOR_RP_AXI_ARB_MODE                ( I_PRIOR_RP_AXI_ARB_MODE           ),
+    .I_PRIOR_TIMER_TIMER_RESOLUTION         ( I_PRIOR_TIMER_TIMER_RESOLUTION    ),
+    .I_PRIOR_TIMER_TIMER_THRESHOLD          ( I_PRIOR_TIMER_TIMER_THRESHOLD     ),
 
-    .I_AOU_WRITEFULL_MSGTYPE_EN             (I_AOU_WRITEFULL_MSGTYPE_EN      )
-
-
-
+    .I_AOU_WRITEFULL_MSGTYPE_EN             ( I_AOU_WRITEFULL_MSGTYPE_EN        ),
+    .O_AOU_TX_B_FIFO_SVALID                 ( w_aou_tx_b_fifo_svalid            )
 );
 
 AOU_SYNC_FIFO_REG
@@ -932,7 +932,9 @@ always_ff @ (posedge I_CLK or negedge I_RESETN) begin
     end
 end
 
+`ifdef AOU_TX_NXT_PACKING_EN
 assign nxt_flit_packing_state = (w_flit_fifo_valid && w_flit_fifo_ready) ? (r_flit_packing_state + 1) : r_flit_packing_state;
+`endif
 
 always_ff @ (posedge I_CLK or negedge I_RESETN) begin
     if (!I_RESETN) begin
@@ -1069,19 +1071,22 @@ assign w_flit_fifo_valid = w_lp_engaged
 assign O_AOU_TX_PENDING = w_aou_fifo_awvalid || w_aou_fifo_wvalid || w_aou_fifo_bvalid
                         || w_aou_fifo_arvalid || w_aou_fifo_rvalid || (r_cur_granule_start != r_cur_flit_for_fifo_start) || w_aou_tx_axi_hs;
 
-assign O_AOU_TX_AXI_TR_PENDING = w_aou_fifo_awvalid || w_aou_fifo_wvalid || w_aou_fifo_bvalid || w_aou_fifo_arvalid || w_aou_fifo_rvalid
-                                || w_aou_tx_axi_hs;
+assign O_AOU_TX_AXI_TR_PENDING = w_aou_fifo_awvalid || w_aou_fifo_wvalid || w_aou_fifo_bvalid || w_aou_fifo_arvalid || w_aou_fifo_rvalid || w_aou_tx_axi_hs
+                                || |I_AOU_TX_AXI_AWVALID || |I_AOU_TX_AXI_WVALID || |I_AOU_TX_AXI_ARVALID || |w_aou_tx_b_fifo_svalid || |I_AOU_TX_AXI_RVALID;
 
 
 // Two parallel packing pipelines. Exactly one elaborates per config:
 //   FDI_PACK_WD == 1024 -> g_pack_2step (half-flit per cycle, 24 granules)
 //   otherwise           -> g_pack_4step (quarter-flit per cycle, 12 granules)
 generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
+    `ifdef AOU_TX_NXT_PACKING_EN 
     logic [64*8-1:0]    r_flit_fifo_data;
+    `endif
     logic [64*8-1:0]    w_flit_fifo_data;
     logic [16-1:0]      w_a_half_header;
     logic [16-1:0]      w_b_half_header;
 
+    `ifdef AOU_TX_NXT_PACKING_EN
     always_ff @ (posedge I_CLK or negedge I_RESETN) begin
         if (!I_RESETN) begin
             r_flit_fifo_data <= 'd0;
@@ -1089,7 +1094,9 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
             r_flit_fifo_data <= w_flit_fifo_data;
         end
     end
-
+    `endif
+    
+    `ifdef AOU_TX_NXT_PACKING_EN
     always_comb begin
         //flit chunk
 
@@ -1167,6 +1174,86 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
         end
 
     end
+   
+    `else
+    always_comb begin
+        //flit chunk
+    
+        case (r_flit_packing_state)
+            2'b00: begin
+                w_a_half_header[2*8-1:0] = 16'b0000_0000_1100_0000;  //flit header 
+            end
+            2'b01: begin
+                w_a_half_header[0 +: 4] = 4'b0000; //RSVD
+                for (int unsigned n=0; n<12; n++) begin
+                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
+                        w_a_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    end else begin
+                        w_a_half_header[4 + n +: 1] = 1'b0;
+                    end
+                end
+            end
+            2'b10: begin
+                w_a_half_header[0 +: 16] = w_aou_msgcredit_valid ? {w_aou_rs_msgcredit_rp, w_aou_rs_msgcredit_wrespcred, w_aou_rs_msgcredit_rdatacred,
+                                            w_aou_rs_msgcredit_wdatacred, w_aou_rs_msgcredit_rreqcred, w_aou_rs_msgcredit_wreqcred} : 16'b0;
+            end
+        //4 flit chunk
+            default: begin
+                w_a_half_header[0+: 4] = 4'b0000; //RSVD
+                for (int unsigned n=0; n<12; n++) begin
+                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
+                        w_a_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    end else begin
+                        w_a_half_header[4 + n +: 1] = 1'b0;
+                    end
+                end
+            end
+        endcase
+    
+        case (r_flit_packing_state)
+            2'b00: begin
+                for (int unsigned n=0; n<12; n++) begin
+                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
+                        w_b_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    end else begin
+                        w_b_half_header[4 + n +: 1] = 1'b0;
+                    end
+                end
+                w_b_half_header[0 +: 4] = 4'b0000; //RSVD
+            end
+            2'b01: begin
+                w_b_half_header[0 +: 16] = 16'b0;
+            end
+            2'b10: begin
+                for (int unsigned n=0; n<12; n++) begin
+                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
+                        w_b_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    end else begin
+                        w_b_half_header[4 + n +: 1] = 1'b0;
+                    end
+                        
+                end
+                w_b_half_header[0 +: 4] = 4'b0000; //RSVD
+            end
+        //4 flit chunk
+            default: begin
+                w_b_half_header[0 +: 16] = 16'b0;
+            end
+        endcase
+        
+        w_flit_fifo_data[0 +: 16] = w_a_half_header;
+        w_flit_fifo_data[64 * 8 -1 -: 16] = w_b_half_header;
+    
+        for (int unsigned n=0; n<12; n++) begin
+            if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start ) & 8'b1111_1111 )) begin
+                w_flit_fifo_data[16 + 40*n +: 40] = r_granule_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+            end else begin
+                w_flit_fifo_data[16 + 40*n +: 40] = 40'b0;
+            end
+        end
+    
+    end
+    `endif
 
     assign w_aou_msgcredit_ready = w_flit_fifo_valid && w_flit_fifo_ready && (r_flit_packing_state == 2'b10);
 
@@ -1177,10 +1264,17 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
         logic                                w_fdi_pl_0_trdy;
         logic [FDI_IF_WD0-1:0]               w_fdi_lp_0_data;
         logic                                w_fdi_lp_0_valid;
+        logic [FDI_IF_WD0-1:0]               w_flit_fifo_in_data;
 
         logic                                w_fdi_pl_1_trdy;
         logic [FDI_IF_WD1-1:0]               w_fdi_lp_1_data;
         logic                                w_fdi_lp_1_valid;
+
+        `ifdef AOU_TX_NXT_PACKING_EN
+        assign w_flit_fifo_in_data = r_flit_fifo_data;
+        `else
+        assign w_flit_fifo_in_data = w_flit_fifo_data;
+        `endif
 
         AOU_TX_CORE_OUT_MUX #(
             .FDI_IF_WD           ( FDI_IF_WD1           )
@@ -1192,7 +1286,7 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
             .I_PHY_TYPE          ( I_PHY_TYPE           ),
 
             .O_FDI_PL_TRDY       ( w_flit_fifo_ready    ),
-            .I_FDI_LP_DATA       ( r_flit_fifo_data     ),
+            .I_FDI_LP_DATA       ( w_flit_fifo_in_data  ),
             .I_FDI_LP_VALID      ( w_flit_fifo_valid    ),
 
             .I_FDI_PL_0_TRDY     ( w_fdi_pl_0_trdy      ),
@@ -1243,6 +1337,13 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
             logic                                w_fdi_pl_0_trdy;
             logic [FDI_IF_WD0-1:0]               w_fdi_lp_0_data;
             logic                                w_fdi_lp_0_valid;
+            logic [FDI_IF_WD1-1:0]               w_flit_fifo_in_data;
+
+            `ifdef AOU_TX_NXT_PACKING_EN
+            assign w_flit_fifo_in_data = r_flit_fifo_data;
+            `else
+            assign w_flit_fifo_in_data = w_flit_fifo_data;
+            `endif
 
             AOU_TX_CORE_OUT_MUX #(
                 .FDI_IF_WD           ( FDI_IF_WD1           )
@@ -1254,7 +1355,7 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
                 .I_PHY_TYPE          ( 1'b0                 ),
 
                 .O_FDI_PL_TRDY       ( w_flit_fifo_ready    ),
-                .I_FDI_LP_DATA       ( r_flit_fifo_data     ),
+                .I_FDI_LP_DATA       ( w_flit_fifo_in_data  ),
                 .I_FDI_LP_VALID      ( w_flit_fifo_valid    ),
 
                 .I_FDI_PL_0_TRDY     ( w_fdi_pl_0_trdy      ),
@@ -1291,7 +1392,7 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
 
                 .I_SVALID           ( w_flit_fifo_valid     ),
                 .O_SREADY           ( w_flit_fifo_ready     ),
-                .I_SDATA            ( r_flit_fifo_data      ),
+                .I_SDATA            ( w_flit_fifo_in_data   ),
 
                 .O_MVALID           ( O_FDI_LP_VALID_0      ),
                 .I_MREADY           ( I_FDI_PL_TRDY_0       ),
@@ -1302,11 +1403,14 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
 
 
 end else begin : g_pack_2step
+    `ifdef AOU_TX_NXT_PACKING_EN
     logic [64*8*2-1:0]    r_flit_fifo_data;
+    `endif
     logic [64*8*2-1:0]    w_flit_fifo_data;
     logic [16-1:0]      w_first_a_half_header, w_second_a_half_header;
     logic [16-1:0]      w_first_b_half_header, w_second_b_half_header;
 
+    `ifdef AOU_TX_NXT_PACKING_EN
     always_ff @ (posedge I_CLK or negedge I_RESETN) begin
         if (!I_RESETN) begin
             r_flit_fifo_data <= 'd0;
@@ -1314,7 +1418,9 @@ end else begin : g_pack_2step
             r_flit_fifo_data <= w_flit_fifo_data;
         end
     end
+    `endif
 
+    `ifdef AOU_TX_NXT_PACKING_EN
     always_comb begin
         //flit chunk
 
@@ -1398,11 +1504,103 @@ end else begin : g_pack_2step
 
     end
 
+    `else
+    always_comb begin
+        //flit chunk
+
+        case (r_flit_packing_state)
+            1'b0 : begin
+                w_first_a_half_header[2*8-1:0] = 16'b0000_0000_1100_0000;  //flit header
+
+                w_second_a_half_header[0 +: 4] = 4'b0000; //RSVD
+                for (int unsigned n=0; n<12; n++) begin
+                    if (n + 12< ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
+                        w_second_a_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
+                    end else begin
+                        w_second_a_half_header[4 + n +: 1] = 1'b0;
+                    end
+                end
+            end
+            1'b1: begin
+                w_first_a_half_header[0 +: 16] = w_aou_msgcredit_valid ? {w_aou_rs_msgcredit_rp, w_aou_rs_msgcredit_wrespcred, w_aou_rs_msgcredit_rdatacred,
+                                            w_aou_rs_msgcredit_wdatacred, w_aou_rs_msgcredit_rreqcred, w_aou_rs_msgcredit_wreqcred} : 16'b0;
+
+                w_second_a_half_header[0+: 4] = 4'b0000; //RSVD
+                for (int unsigned n=0; n<12; n++) begin
+                    if (n + 12 < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
+                        w_second_a_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
+                    end else begin
+                        w_second_a_half_header[4 + n +: 1] = 1'b0;
+                    end
+                end
+            end
+        endcase
+
+        case (r_flit_packing_state)
+            'b0: begin
+                for (int unsigned n=0; n<12; n++) begin
+                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
+                        w_first_b_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    end else begin
+                        w_first_b_half_header[4 + n +: 1] = 1'b0;
+                    end
+                end
+                w_first_b_half_header[0 +: 4] = 4'b0000; //RSVD
+
+                w_second_b_half_header[0 +: 16] = 16'b0;
+            end
+            1'b1: begin
+                for (int unsigned n=0; n<12; n++) begin
+                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
+                        w_first_b_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n ) & (8'b0111_1111)];
+                    end else begin
+                        w_first_b_half_header[4 + n +: 1] = 1'b0;
+                    end
+
+                end
+                w_first_b_half_header[0 +: 4] = 4'b0000; //RSVD
+
+                w_second_b_half_header[0 +: 16] = 16'b0;
+            end
+        endcase
+
+        w_flit_fifo_data[0 +: 16] = w_first_a_half_header;
+        w_flit_fifo_data[64 * 8 -1 -: 16] = w_first_b_half_header;
+
+        w_flit_fifo_data[512 +: 16] = w_second_a_half_header;
+        w_flit_fifo_data[512 + 64 * 8 -1 -: 16] = w_second_b_half_header;
+
+        for (int unsigned n=0; n<12; n++) begin
+            if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start ) & 8'b1111_1111 )) begin
+                w_flit_fifo_data[16 + 40*n +: 40] = r_granule_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+            end else begin
+                w_flit_fifo_data[16 + 40*n +: 40] = 40'b0;
+            end
+        end
+
+        for (int unsigned n=0; n<12; n++) begin
+            if (n + 12 < ((r_cur_granule_start - r_cur_flit_for_fifo_start ) & 8'b1111_1111 )) begin
+                w_flit_fifo_data[512 + 16 + 40*n +: 40] = r_granule_buffer[(r_cur_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
+            end else begin
+                w_flit_fifo_data[512 + 16 + 40*n +: 40] = 40'b0;
+            end
+        end
+
+    end
+    `endif
+    
     assign w_aou_msgcredit_ready = w_flit_fifo_valid && w_flit_fifo_ready && (r_flit_packing_state == 1'b1);
 
     logic                                w_fdi_pl_0_trdy;
     logic [FDI_IF_WD0-1:0]               w_fdi_lp_0_data;
     logic                                w_fdi_lp_0_valid;
+    logic [FDI_IF_WD1-1:0]               w_flit_fifo_in_data;
+
+    `ifdef AOU_TX_NXT_PACKING_EN
+    assign w_flit_fifo_in_data = r_flit_fifo_data;
+    `else
+    assign w_flit_fifo_in_data = w_flit_fifo_data;
+    `endif
 
     `ifdef TWO_PHY
 
@@ -1411,25 +1609,25 @@ end else begin : g_pack_2step
         logic                                w_fdi_lp_1_valid;
 
         AOU_TX_CORE_OUT_MUX #(
-            .FDI_IF_WD           ( FDI_IF_WD1        )
+            .FDI_IF_WD           ( FDI_IF_WD1           )
         ) u_aou_tx_core_out_mux
         (
-            .I_CLK               ( I_CLK             ),
-            .I_RESETN            ( I_RESETN          ),
+            .I_CLK               ( I_CLK                ),
+            .I_RESETN            ( I_RESETN             ),
 
-            .I_PHY_TYPE          ( I_PHY_TYPE        ),
+            .I_PHY_TYPE          ( I_PHY_TYPE           ),
 
-            .O_FDI_PL_TRDY       ( w_flit_fifo_ready ),
-            .I_FDI_LP_DATA       ( r_flit_fifo_data  ),
-            .I_FDI_LP_VALID      ( w_flit_fifo_valid ),
+            .O_FDI_PL_TRDY       ( w_flit_fifo_ready    ),
+            .I_FDI_LP_DATA       ( w_flit_fifo_in_data  ),
+            .I_FDI_LP_VALID      ( w_flit_fifo_valid    ),
 
-            .I_FDI_PL_0_TRDY     ( w_fdi_pl_0_trdy   ),
-            .O_FDI_LP_0_DATA     ( w_fdi_lp_0_data   ),
-            .O_FDI_LP_0_VALID    ( w_fdi_lp_0_valid  ),
+            .I_FDI_PL_0_TRDY     ( w_fdi_pl_0_trdy      ),
+            .O_FDI_LP_0_DATA     ( w_fdi_lp_0_data      ),
+            .O_FDI_LP_0_VALID    ( w_fdi_lp_0_valid     ),
 
-            .I_FDI_PL_1_TRDY     ( w_fdi_pl_1_trdy   ),
-            .O_FDI_LP_1_DATA     ( w_fdi_lp_1_data   ),
-            .O_FDI_LP_1_VALID    ( w_fdi_lp_1_valid  )
+            .I_FDI_PL_1_TRDY     ( w_fdi_pl_1_trdy      ),
+            .O_FDI_LP_1_DATA     ( w_fdi_lp_1_data      ),
+            .O_FDI_LP_1_VALID    ( w_fdi_lp_1_valid     )
         );
 
         AOU_REV_RS #(
@@ -1474,7 +1672,7 @@ end else begin : g_pack_2step
 
             .I_SVALID           ( w_flit_fifo_valid     ),
             .O_SREADY           ( w_flit_fifo_ready     ),
-            .I_SDATA            ( r_flit_fifo_data      ),
+            .I_SDATA            ( w_flit_fifo_in_data   ),
 
             .O_MVALID           ( O_FDI_LP_VALID_0      ),
             .I_MREADY           ( I_FDI_PL_TRDY_0       ),
