@@ -141,11 +141,9 @@ The FIFO depth of the two RPs are identical.
 
 [cols=",",options="header",]
 |=============================
-|AoU Area (um^2) |64GB/s
-|1RP
-|(AXI : 512bit) |97K
-|2RP
-|(AXI : 256bit & 512bit) |197K
+|Configuration | AoU Area (um^2)
+|1RP (AXI : 512bit) |97K
+|2RP (AXI : 256bit & 512bit) |197K
 |=============================
 
 _Table 10. AOU_CORE Area (measured at an ++FDI_CFG_SP_64B++-equivalent configuration; numbers will scale up for ++FDI_CFG_*_128B++ configurations due to the 88 \-> 140 R/W FIFO depth bump.)_
@@ -179,7 +177,7 @@ endif::release[]
 [width="99%",cols="28%,50%,22%",options="header",]
 |===================================================================================
 |Document Name |Document Location and/or URL |Issuance Date
-|AXI-over-UCIe (AoU) Specification, Revision 0.7 |https://openchipletatlas.org |2025
+|AXI-over-UCIe (AoU) Specification, Revision 0.7 | https://www.openchipletatlas.org/specifications/aou/0.7.1 |2025
 |===================================================================================
 
 _Table 12. Referenced Documents_
