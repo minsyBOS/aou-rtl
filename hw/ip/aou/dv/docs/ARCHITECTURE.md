@@ -68,6 +68,7 @@ all configurations and the naming legend are in README "Build configurations"
 | 2xmix-tp64_128 | 2 | 512, 1024 | TP_64B_128B (TWO_PHY) | two-PHY FDI, 2 RPs, mixed widths |
 | 2x512-tp32_64 | 2 | 512 | TP_32B_64B (TWO_PHY) | two-PHY FDI with a 256-bit PHY0, 2 RPs at one width |
 | 1x512-sp64-p512 | 1 | 512 | SP_64B | AXI_PEER_DIE_MAX_DATA_WD 512 (remote die at most 512 bits) |
+| 1x512-sp64-nxt | 1 | 512 | SP_64B | TX_NXT_PACKING_EN 1 (registered TX packer output stage) |
 | 2xmix-sp64-rxf | 2 | 1024, 256 | SP_64B | non-default RX FIFO depths, RX FIFO register slices off |
 
 The configurations are a pairwise set rather than a cross product: every pair

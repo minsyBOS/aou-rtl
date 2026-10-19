@@ -47,6 +47,12 @@ import packet_def_pkg::*;
     parameter   FDI_IF_WD0          = 512,
     parameter   FDI_IF_WD1          = 512,
 
+    // TX flit packer output stage. 0: the flit chunk is driven combinationally
+    // from the granule ring (current packing state). 1: the chunk is computed
+    // from the look-ahead (next) packing state and registered before the FDI
+    // output mux.
+    parameter   TX_NXT_PACKING_EN   = 0,
+
     parameter   CNT_RP0_AW_MAX_CREDIT = 8,
     parameter   CNT_RP0_W_MAX_CREDIT  = 8,
     parameter   CNT_RP0_B_MAX_CREDIT  = 8,
@@ -402,9 +408,7 @@ logic       r_tx_activation_valid;
 typedef logic [FLIT_PACK_STATE_W-1:0] flit_packing_state_t;
 
 flit_packing_state_t r_flit_packing_state;
-`ifdef AOU_TX_NXT_PACKING_EN
 flit_packing_state_t nxt_flit_packing_state;
-`endif
 
 //reg
 logic [40-1:0]                   r_granule_buffer [RING_DEPTH-1:0];          //128 Granule buffer
@@ -932,9 +936,7 @@ always_ff @ (posedge I_CLK or negedge I_RESETN) begin
     end
 end
 
-`ifdef AOU_TX_NXT_PACKING_EN
 assign nxt_flit_packing_state = (w_flit_fifo_valid && w_flit_fifo_ready) ? (r_flit_packing_state + 1) : r_flit_packing_state;
-`endif
 
 always_ff @ (posedge I_CLK or negedge I_RESETN) begin
     if (!I_RESETN) begin
@@ -1079,115 +1081,60 @@ assign O_AOU_TX_AXI_TR_PENDING = w_aou_fifo_awvalid || w_aou_fifo_wvalid || w_ao
 //   FDI_PACK_WD == 1024 -> g_pack_2step (half-flit per cycle, 24 granules)
 //   otherwise           -> g_pack_4step (quarter-flit per cycle, 12 granules)
 generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
-    `ifdef AOU_TX_NXT_PACKING_EN 
-    logic [64*8-1:0]    r_flit_fifo_data;
-    `endif
     logic [64*8-1:0]    w_flit_fifo_data;
+    logic [64*8-1:0]    w_flit_chunk;
     logic [16-1:0]      w_a_half_header;
     logic [16-1:0]      w_b_half_header;
 
-    `ifdef AOU_TX_NXT_PACKING_EN
-    always_ff @ (posedge I_CLK or negedge I_RESETN) begin
-        if (!I_RESETN) begin
-            r_flit_fifo_data <= 'd0;
-        end else if (w_misc_activation_valid || w_flit_fifo_valid || O_AOU_TX_AXI_TR_PENDING) begin
-            r_flit_fifo_data <= w_flit_fifo_data;
-        end
+    // Pack sources: the look-ahead (next) state and ring when TX_NXT_PACKING_EN,
+    // the current registered state and ring otherwise.
+    flit_packing_state_t         w_pack_state;
+    logic [RING_CNT-1:0]         w_pack_granule_start;
+    logic [RING_CNT-1:0]         w_pack_fifo_start;
+    logic [40-1:0]               w_pack_granule  [RING_DEPTH-1:0];
+    logic                        w_pack_msgstart [RING_DEPTH-1:0];
+
+    if (TX_NXT_PACKING_EN != 0) begin : g_src_nxt
+        assign w_pack_state         = nxt_flit_packing_state;
+        assign w_pack_granule_start = nxt_granule_start;
+        assign w_pack_fifo_start    = nxt_flit_for_fifo_start;
+        assign w_pack_granule       = nxt_granule_buffer;
+        assign w_pack_msgstart      = nxt_msgstart_buffer;
+    end else begin : g_src_cur
+        assign w_pack_state         = r_flit_packing_state;
+        assign w_pack_granule_start = r_cur_granule_start;
+        assign w_pack_fifo_start    = r_cur_flit_for_fifo_start;
+        assign w_pack_granule       = r_granule_buffer;
+        assign w_pack_msgstart      = r_msgstart_buffer;
     end
-    `endif
-    
-    `ifdef AOU_TX_NXT_PACKING_EN
-    always_comb begin
-        //flit chunk
 
-        case (nxt_flit_packing_state)
-            2'b00: begin
-                w_a_half_header[2*8-1:0] = 16'b0000_0000_1100_0000;  //flit header
-            end
-            2'b01: begin
-                w_a_half_header[0 +: 4] = 4'b0000; //RSVD
-                for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((nxt_granule_start - nxt_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_a_half_header[4 + n +: 1] = nxt_msgstart_buffer[(nxt_flit_for_fifo_start + n) & (8'b0111_1111)];
-                    end else begin
-                        w_a_half_header[4 + n +: 1] = 1'b0;
-                    end
-                end
-            end
-            2'b10: begin
-                w_a_half_header[0 +: 16] = w_aou_msgcredit_valid ? {w_aou_rs_msgcredit_rp, w_aou_rs_msgcredit_wrespcred, w_aou_rs_msgcredit_rdatacred,
-                                            w_aou_rs_msgcredit_wdatacred, w_aou_rs_msgcredit_rreqcred, w_aou_rs_msgcredit_wreqcred} : 16'b0;
-            end
-        //4 flit chunk
-            default: begin
-                w_a_half_header[0+: 4] = 4'b0000; //RSVD
-                for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((nxt_granule_start - nxt_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_a_half_header[4 + n +: 1] = nxt_msgstart_buffer[(nxt_flit_for_fifo_start + n) & (8'b0111_1111)];
-                    end else begin
-                        w_a_half_header[4 + n +: 1] = 1'b0;
-                    end
-                end
-            end
-        endcase
-
-        case (nxt_flit_packing_state)
-            2'b00: begin
-                for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((nxt_granule_start - nxt_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_b_half_header[4 + n +: 1] = nxt_msgstart_buffer[(nxt_flit_for_fifo_start + n) & (8'b0111_1111)];
-                    end else begin
-                        w_b_half_header[4 + n +: 1] = 1'b0;
-                    end
-                end
-                w_b_half_header[0 +: 4] = 4'b0000; //RSVD
-            end
-            2'b01: begin
-                w_b_half_header[0 +: 16] = 16'b0;
-            end
-            2'b10: begin
-                for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((nxt_granule_start - nxt_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_b_half_header[4 + n +: 1] = nxt_msgstart_buffer[(nxt_flit_for_fifo_start + n) & (8'b0111_1111)];
-                    end else begin
-                        w_b_half_header[4 + n +: 1] = 1'b0;
-                    end
-
-                end
-                w_b_half_header[0 +: 4] = 4'b0000; //RSVD
-            end
-        //4 flit chunk
-            default: begin
-                w_b_half_header[0 +: 16] = 16'b0;
-            end
-        endcase
-
-        w_flit_fifo_data[0 +: 16] = w_a_half_header;
-        w_flit_fifo_data[64 * 8 -1 -: 16] = w_b_half_header;
-
-        for (int unsigned n=0; n<12; n++) begin
-            if (n < ((nxt_granule_start - nxt_flit_for_fifo_start ) & 8'b1111_1111 )) begin
-                w_flit_fifo_data[16 + 40*n +: 40] = nxt_granule_buffer[(nxt_flit_for_fifo_start + n) & (8'b0111_1111)];
-            end else begin
-                w_flit_fifo_data[16 + 40*n +: 40] = 40'b0;
+    // Output stage: registered chunk when TX_NXT_PACKING_EN, combinational otherwise.
+    if (TX_NXT_PACKING_EN != 0) begin : g_out_reg
+        logic [64*8-1:0]    r_flit_fifo_data;
+        always_ff @ (posedge I_CLK or negedge I_RESETN) begin
+            if (!I_RESETN) begin
+                r_flit_fifo_data <= 'd0;
+            end else if (w_misc_activation_valid || w_flit_fifo_valid || O_AOU_TX_AXI_TR_PENDING) begin
+                r_flit_fifo_data <= w_flit_fifo_data;
             end
         end
-
+        assign w_flit_chunk = r_flit_fifo_data;
+    end else begin : g_out_comb
+        assign w_flit_chunk = w_flit_fifo_data;
     end
-   
-    `else
+
     always_comb begin
         //flit chunk
     
-        case (r_flit_packing_state)
+        case (w_pack_state)
             2'b00: begin
                 w_a_half_header[2*8-1:0] = 16'b0000_0000_1100_0000;  //flit header 
             end
             2'b01: begin
                 w_a_half_header[0 +: 4] = 4'b0000; //RSVD
                 for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_a_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    if (n < ((w_pack_granule_start - w_pack_fifo_start) & 8'b1111_1111 )) begin
+                        w_a_half_header[4 + n +: 1] = w_pack_msgstart[(w_pack_fifo_start + n) & (8'b0111_1111)];
                     end else begin
                         w_a_half_header[4 + n +: 1] = 1'b0;
                     end
@@ -1201,8 +1148,8 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
             default: begin
                 w_a_half_header[0+: 4] = 4'b0000; //RSVD
                 for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_a_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    if (n < ((w_pack_granule_start - w_pack_fifo_start) & 8'b1111_1111 )) begin
+                        w_a_half_header[4 + n +: 1] = w_pack_msgstart[(w_pack_fifo_start + n) & (8'b0111_1111)];
                     end else begin
                         w_a_half_header[4 + n +: 1] = 1'b0;
                     end
@@ -1210,11 +1157,11 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
             end
         endcase
     
-        case (r_flit_packing_state)
+        case (w_pack_state)
             2'b00: begin
                 for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_b_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    if (n < ((w_pack_granule_start - w_pack_fifo_start) & 8'b1111_1111 )) begin
+                        w_b_half_header[4 + n +: 1] = w_pack_msgstart[(w_pack_fifo_start + n) & (8'b0111_1111)];
                     end else begin
                         w_b_half_header[4 + n +: 1] = 1'b0;
                     end
@@ -1226,8 +1173,8 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
             end
             2'b10: begin
                 for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_b_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    if (n < ((w_pack_granule_start - w_pack_fifo_start) & 8'b1111_1111 )) begin
+                        w_b_half_header[4 + n +: 1] = w_pack_msgstart[(w_pack_fifo_start + n) & (8'b0111_1111)];
                     end else begin
                         w_b_half_header[4 + n +: 1] = 1'b0;
                     end
@@ -1245,15 +1192,14 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
         w_flit_fifo_data[64 * 8 -1 -: 16] = w_b_half_header;
     
         for (int unsigned n=0; n<12; n++) begin
-            if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start ) & 8'b1111_1111 )) begin
-                w_flit_fifo_data[16 + 40*n +: 40] = r_granule_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
+            if (n < ((w_pack_granule_start - w_pack_fifo_start ) & 8'b1111_1111 )) begin
+                w_flit_fifo_data[16 + 40*n +: 40] = w_pack_granule[(w_pack_fifo_start + n) & (8'b0111_1111)];
             end else begin
                 w_flit_fifo_data[16 + 40*n +: 40] = 40'b0;
             end
         end
     
     end
-    `endif
 
     assign w_aou_msgcredit_ready = w_flit_fifo_valid && w_flit_fifo_ready && (r_flit_packing_state == 2'b10);
 
@@ -1270,11 +1216,7 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
         logic [FDI_IF_WD1-1:0]               w_fdi_lp_1_data;
         logic                                w_fdi_lp_1_valid;
 
-        `ifdef AOU_TX_NXT_PACKING_EN
-        assign w_flit_fifo_in_data = r_flit_fifo_data;
-        `else
-        assign w_flit_fifo_in_data = w_flit_fifo_data;
-        `endif
+        assign w_flit_fifo_in_data = w_flit_chunk;
 
         AOU_TX_CORE_OUT_MUX #(
             .FDI_IF_WD           ( FDI_IF_WD1           )
@@ -1339,11 +1281,7 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
             logic                                w_fdi_lp_0_valid;
             logic [FDI_IF_WD1-1:0]               w_flit_fifo_in_data;
 
-            `ifdef AOU_TX_NXT_PACKING_EN
-            assign w_flit_fifo_in_data = r_flit_fifo_data;
-            `else
-            assign w_flit_fifo_in_data = w_flit_fifo_data;
-            `endif
+            assign w_flit_fifo_in_data = w_flit_chunk;
 
             AOU_TX_CORE_OUT_MUX #(
                 .FDI_IF_WD           ( FDI_IF_WD1           )
@@ -1385,11 +1323,7 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
         end else begin : g_sp_64b
             logic [FDI_IF_WD0-1:0]               w_flit_fifo_in_data;
 
-            `ifdef AOU_TX_NXT_PACKING_EN
-            assign w_flit_fifo_in_data = r_flit_fifo_data;
-            `else
-            assign w_flit_fifo_in_data = w_flit_fifo_data;
-            `endif
+            assign w_flit_fifo_in_data = w_flit_chunk;
 
             AOU_REV_RS #(
                 .DATA_WIDTH         (FDI_IF_WD0)
@@ -1411,35 +1345,59 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
 
 
 end else begin : g_pack_2step
-    `ifdef AOU_TX_NXT_PACKING_EN
-    logic [64*8*2-1:0]    r_flit_fifo_data;
-    `endif
     logic [64*8*2-1:0]    w_flit_fifo_data;
+    logic [64*8*2-1:0]    w_flit_chunk;
     logic [16-1:0]      w_first_a_half_header, w_second_a_half_header;
     logic [16-1:0]      w_first_b_half_header, w_second_b_half_header;
 
-    `ifdef AOU_TX_NXT_PACKING_EN
-    always_ff @ (posedge I_CLK or negedge I_RESETN) begin
-        if (!I_RESETN) begin
-            r_flit_fifo_data <= 'd0;
-        end else if (w_misc_activation_valid || w_flit_fifo_valid || O_AOU_TX_AXI_TR_PENDING) begin
-            r_flit_fifo_data <= w_flit_fifo_data;
-        end
-    end
-    `endif
+    // Pack sources: the look-ahead (next) state and ring when TX_NXT_PACKING_EN,
+    // the current registered state and ring otherwise.
+    flit_packing_state_t         w_pack_state;
+    logic [RING_CNT-1:0]         w_pack_granule_start;
+    logic [RING_CNT-1:0]         w_pack_fifo_start;
+    logic [40-1:0]               w_pack_granule  [RING_DEPTH-1:0];
+    logic                        w_pack_msgstart [RING_DEPTH-1:0];
 
-    `ifdef AOU_TX_NXT_PACKING_EN
+    if (TX_NXT_PACKING_EN != 0) begin : g_src_nxt
+        assign w_pack_state         = nxt_flit_packing_state;
+        assign w_pack_granule_start = nxt_granule_start;
+        assign w_pack_fifo_start    = nxt_flit_for_fifo_start;
+        assign w_pack_granule       = nxt_granule_buffer;
+        assign w_pack_msgstart      = nxt_msgstart_buffer;
+    end else begin : g_src_cur
+        assign w_pack_state         = r_flit_packing_state;
+        assign w_pack_granule_start = r_cur_granule_start;
+        assign w_pack_fifo_start    = r_cur_flit_for_fifo_start;
+        assign w_pack_granule       = r_granule_buffer;
+        assign w_pack_msgstart      = r_msgstart_buffer;
+    end
+
+    // Output stage: registered chunk when TX_NXT_PACKING_EN, combinational otherwise.
+    if (TX_NXT_PACKING_EN != 0) begin : g_out_reg
+        logic [64*8*2-1:0]    r_flit_fifo_data;
+        always_ff @ (posedge I_CLK or negedge I_RESETN) begin
+            if (!I_RESETN) begin
+                r_flit_fifo_data <= 'd0;
+            end else if (w_misc_activation_valid || w_flit_fifo_valid || O_AOU_TX_AXI_TR_PENDING) begin
+                r_flit_fifo_data <= w_flit_fifo_data;
+            end
+        end
+        assign w_flit_chunk = r_flit_fifo_data;
+    end else begin : g_out_comb
+        assign w_flit_chunk = w_flit_fifo_data;
+    end
+
     always_comb begin
         //flit chunk
 
-        case (nxt_flit_packing_state)
+        case (w_pack_state)
             1'b0 : begin
                 w_first_a_half_header[2*8-1:0] = 16'b0000_0000_1100_0000;  //flit header
 
                 w_second_a_half_header[0 +: 4] = 4'b0000; //RSVD
                 for (int unsigned n=0; n<12; n++) begin
-                    if (n + 12< ((nxt_granule_start - nxt_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_second_a_half_header[4 + n +: 1] = nxt_msgstart_buffer[(nxt_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
+                    if (n + 12< ((w_pack_granule_start - w_pack_fifo_start) & 8'b1111_1111 )) begin
+                        w_second_a_half_header[4 + n +: 1] = w_pack_msgstart[(w_pack_fifo_start + n + 12) & (8'b0111_1111)];
                     end else begin
                         w_second_a_half_header[4 + n +: 1] = 1'b0;
                     end
@@ -1451,8 +1409,8 @@ end else begin : g_pack_2step
 
                 w_second_a_half_header[0+: 4] = 4'b0000; //RSVD
                 for (int unsigned n=0; n<12; n++) begin
-                    if (n + 12 < ((nxt_granule_start - nxt_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_second_a_half_header[4 + n +: 1] = nxt_msgstart_buffer[(nxt_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
+                    if (n + 12 < ((w_pack_granule_start - w_pack_fifo_start) & 8'b1111_1111 )) begin
+                        w_second_a_half_header[4 + n +: 1] = w_pack_msgstart[(w_pack_fifo_start + n + 12) & (8'b0111_1111)];
                     end else begin
                         w_second_a_half_header[4 + n +: 1] = 1'b0;
                     end
@@ -1460,11 +1418,11 @@ end else begin : g_pack_2step
             end
         endcase
 
-        case (nxt_flit_packing_state)
+        case (w_pack_state)
             'b0: begin
                 for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((nxt_granule_start - nxt_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_first_b_half_header[4 + n +: 1] = nxt_msgstart_buffer[(nxt_flit_for_fifo_start + n) & (8'b0111_1111)];
+                    if (n < ((w_pack_granule_start - w_pack_fifo_start) & 8'b1111_1111 )) begin
+                        w_first_b_half_header[4 + n +: 1] = w_pack_msgstart[(w_pack_fifo_start + n) & (8'b0111_1111)];
                     end else begin
                         w_first_b_half_header[4 + n +: 1] = 1'b0;
                     end
@@ -1475,8 +1433,8 @@ end else begin : g_pack_2step
             end
             1'b1: begin
                 for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((nxt_granule_start - nxt_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_first_b_half_header[4 + n +: 1] = nxt_msgstart_buffer[(nxt_flit_for_fifo_start + n ) & (8'b0111_1111)];
+                    if (n < ((w_pack_granule_start - w_pack_fifo_start) & 8'b1111_1111 )) begin
+                        w_first_b_half_header[4 + n +: 1] = w_pack_msgstart[(w_pack_fifo_start + n ) & (8'b0111_1111)];
                     end else begin
                         w_first_b_half_header[4 + n +: 1] = 1'b0;
                     end
@@ -1495,107 +1453,22 @@ end else begin : g_pack_2step
         w_flit_fifo_data[512 + 64 * 8 -1 -: 16] = w_second_b_half_header;
 
         for (int unsigned n=0; n<12; n++) begin
-            if (n < ((nxt_granule_start - nxt_flit_for_fifo_start ) & 8'b1111_1111 )) begin
-                w_flit_fifo_data[16 + 40*n +: 40] = nxt_granule_buffer[(nxt_flit_for_fifo_start + n) & (8'b0111_1111)];
+            if (n < ((w_pack_granule_start - w_pack_fifo_start ) & 8'b1111_1111 )) begin
+                w_flit_fifo_data[16 + 40*n +: 40] = w_pack_granule[(w_pack_fifo_start + n) & (8'b0111_1111)];
             end else begin
                 w_flit_fifo_data[16 + 40*n +: 40] = 40'b0;
             end
         end
 
         for (int unsigned n=0; n<12; n++) begin
-            if (n + 12 < ((nxt_granule_start - nxt_flit_for_fifo_start ) & 8'b1111_1111 )) begin
-                w_flit_fifo_data[512 + 16 + 40*n +: 40] = nxt_granule_buffer[(nxt_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
+            if (n + 12 < ((w_pack_granule_start - w_pack_fifo_start ) & 8'b1111_1111 )) begin
+                w_flit_fifo_data[512 + 16 + 40*n +: 40] = w_pack_granule[(w_pack_fifo_start + n + 12) & (8'b0111_1111)];
             end else begin
                 w_flit_fifo_data[512 + 16 + 40*n +: 40] = 40'b0;
             end
         end
 
     end
-
-    `else
-    always_comb begin
-        //flit chunk
-
-        case (r_flit_packing_state)
-            1'b0 : begin
-                w_first_a_half_header[2*8-1:0] = 16'b0000_0000_1100_0000;  //flit header
-
-                w_second_a_half_header[0 +: 4] = 4'b0000; //RSVD
-                for (int unsigned n=0; n<12; n++) begin
-                    if (n + 12< ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_second_a_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
-                    end else begin
-                        w_second_a_half_header[4 + n +: 1] = 1'b0;
-                    end
-                end
-            end
-            1'b1: begin
-                w_first_a_half_header[0 +: 16] = w_aou_msgcredit_valid ? {w_aou_rs_msgcredit_rp, w_aou_rs_msgcredit_wrespcred, w_aou_rs_msgcredit_rdatacred,
-                                            w_aou_rs_msgcredit_wdatacred, w_aou_rs_msgcredit_rreqcred, w_aou_rs_msgcredit_wreqcred} : 16'b0;
-
-                w_second_a_half_header[0+: 4] = 4'b0000; //RSVD
-                for (int unsigned n=0; n<12; n++) begin
-                    if (n + 12 < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_second_a_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
-                    end else begin
-                        w_second_a_half_header[4 + n +: 1] = 1'b0;
-                    end
-                end
-            end
-        endcase
-
-        case (r_flit_packing_state)
-            'b0: begin
-                for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_first_b_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
-                    end else begin
-                        w_first_b_half_header[4 + n +: 1] = 1'b0;
-                    end
-                end
-                w_first_b_half_header[0 +: 4] = 4'b0000; //RSVD
-
-                w_second_b_half_header[0 +: 16] = 16'b0;
-            end
-            1'b1: begin
-                for (int unsigned n=0; n<12; n++) begin
-                    if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start) & 8'b1111_1111 )) begin
-                        w_first_b_half_header[4 + n +: 1] = r_msgstart_buffer[(r_cur_flit_for_fifo_start + n ) & (8'b0111_1111)];
-                    end else begin
-                        w_first_b_half_header[4 + n +: 1] = 1'b0;
-                    end
-
-                end
-                w_first_b_half_header[0 +: 4] = 4'b0000; //RSVD
-
-                w_second_b_half_header[0 +: 16] = 16'b0;
-            end
-        endcase
-
-        w_flit_fifo_data[0 +: 16] = w_first_a_half_header;
-        w_flit_fifo_data[64 * 8 -1 -: 16] = w_first_b_half_header;
-
-        w_flit_fifo_data[512 +: 16] = w_second_a_half_header;
-        w_flit_fifo_data[512 + 64 * 8 -1 -: 16] = w_second_b_half_header;
-
-        for (int unsigned n=0; n<12; n++) begin
-            if (n < ((r_cur_granule_start - r_cur_flit_for_fifo_start ) & 8'b1111_1111 )) begin
-                w_flit_fifo_data[16 + 40*n +: 40] = r_granule_buffer[(r_cur_flit_for_fifo_start + n) & (8'b0111_1111)];
-            end else begin
-                w_flit_fifo_data[16 + 40*n +: 40] = 40'b0;
-            end
-        end
-
-        for (int unsigned n=0; n<12; n++) begin
-            if (n + 12 < ((r_cur_granule_start - r_cur_flit_for_fifo_start ) & 8'b1111_1111 )) begin
-                w_flit_fifo_data[512 + 16 + 40*n +: 40] = r_granule_buffer[(r_cur_flit_for_fifo_start + n + 12) & (8'b0111_1111)];
-            end else begin
-                w_flit_fifo_data[512 + 16 + 40*n +: 40] = 40'b0;
-            end
-        end
-
-    end
-    `endif
     
     assign w_aou_msgcredit_ready = w_flit_fifo_valid && w_flit_fifo_ready && (r_flit_packing_state == 1'b1);
 
@@ -1604,11 +1477,7 @@ end else begin : g_pack_2step
     logic                                w_fdi_lp_0_valid;
     logic [FDI_IF_WD1-1:0]               w_flit_fifo_in_data;
 
-    `ifdef AOU_TX_NXT_PACKING_EN
-    assign w_flit_fifo_in_data = r_flit_fifo_data;
-    `else
-    assign w_flit_fifo_in_data = w_flit_fifo_data;
-    `endif
+    assign w_flit_fifo_in_data = w_flit_chunk;
 
     `ifdef TWO_PHY
 

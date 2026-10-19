@@ -6,7 +6,8 @@
 // T1 top (tb_top, no ports): AOU_TOP as u_dut against layered models. Build
 // configuration comes from defines (aou_sim_cfg.toml targets; Makefile CONFIG): AOU_RP_COUNT, AOU_RP<n>_DATA_W (per RP; default
 // AOU_RP_DATA_W), AOU_FDI_CONFIG, AOU_PEER_MAX_W (AXI_PEER_DIE_MAX_DATA_WD, default
-// 1024), TWO_PHY for the two-PHY FDI configurations, and
+// 1024), AOU_TX_NXT_PACKING (TX_NXT_PACKING_EN, default 0), TWO_PHY for the
+// two-PHY FDI configurations, and
 // AOU_RX_FIFO_ALT for non-default RX FIFO depths with the register slices off
 // (aou_t1_env_pkg::AOU_T1_RX_DEPTH). Every interface is registered in
 // uvm_config_db under scope "*" (docs/ARCHITECTURE.md) by the SV-UVM harness
@@ -39,6 +40,9 @@
 `ifndef AOU_PEER_MAX_W
 `define AOU_PEER_MAX_W 1024
 `endif
+`ifndef AOU_TX_NXT_PACKING
+`define AOU_TX_NXT_PACKING 0
+`endif
 
 module tb_top;
   import uvm_pkg::*;
@@ -55,6 +59,7 @@ module tb_top;
   localparam int RP_DATA_W  = (RPW01 > RPW23) ? RPW01 : RPW23;
   localparam int FDI_CFG    = `AOU_FDI_CONFIG;
   localparam int PEER_W     = `AOU_PEER_MAX_W;
+  localparam int NXT_PACK   = `AOU_TX_NXT_PACKING;
   localparam int BUS_W      = 1024;
   localparam int AXI_W      = 1024;
   localparam int WD0 = (FDI_CFG == 0 || FDI_CFG == 3) ? 256 : (FDI_CFG == 2) ? 1024 : 512;
@@ -352,7 +357,8 @@ module tb_top;
       .RP1_AXI_DATA_WD(RPW1),
       .RP2_AXI_DATA_WD(RPW2),
       .RP3_AXI_DATA_WD(RPW3),
-      .AXI_PEER_DIE_MAX_DATA_WD(PEER_W)
+      .AXI_PEER_DIE_MAX_DATA_WD(PEER_W),
+      .TX_NXT_PACKING_EN(NXT_PACK)
 `ifdef AOU_RX_FIFO_ALT
       ,
       .RP0_RX_AW_FIFO_DEPTH(aou_t1_env_pkg::AOU_T1_RX_DEPTH[0][0]),

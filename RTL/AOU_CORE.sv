@@ -96,6 +96,10 @@ import packet_def_pkg::*;
     parameter   S_RD_MO_CNT                 = 32,
     parameter   S_WR_MO_CNT                 = 32,
 
+    // TX flit packer output stage: 0 combinational (current state),
+    // 1 registered from the look-ahead state. See AOU_TX_CORE.
+    parameter   TX_NXT_PACKING_EN           = 0,
+
     parameter   M_RD_MO_CNT                 = 32,
     parameter   M_WR_MO_CNT                 = 32,
 
@@ -1160,6 +1164,7 @@ import packet_def_pkg::*;
 
         .FDI_IF_WD0                     ( FDI_IF_WD0                    ),
         .FDI_IF_WD1                     ( FDI_IF_WD1                    ),
+        .TX_NXT_PACKING_EN              ( TX_NXT_PACKING_EN             ),
         .RP0_AXI_DATA_WD                ( RP0_AXI_DATA_WD               ),
         .RP1_AXI_DATA_WD                ( RP1_AXI_DATA_WD               ),
         .RP2_AXI_DATA_WD                ( RP2_AXI_DATA_WD               ),

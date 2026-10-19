@@ -299,6 +299,17 @@ for timing closure.
 
 |S_WR_MO_CNT |parameter |32 |Slave write outstanding count.
 
+|TX_NXT_PACKING_EN |parameter |0 |TX flit packer output stage in
+[.monospaced]#++AOU_TX_CORE++#. 0: each FDI chunk is driven combinationally from the
+granule ring and the current packing state. 1: the chunk is computed from the
+look-ahead (next) packing state and ring contents and registered before the
+FDI output mux, so the FDI TX data leaves a register and the ring-to-FDI path
+is shortened; the AXI-input-to-ring-to-register path grows by the packing mux.
+The two are cycle-equivalent: the register is a retiming, and every FDI beat
+(data, valid, handshake) is identical in both settings, so the latency in
+MAS Table 8 holds for either value. Measured on the UVM bench
+([.monospaced]#++1x512-sp64++# against [.monospaced]#++1x512-sp64-nxt++#).
+
 |M_RD_MO_CNT |parameter |32 |Master read outstanding count.
 
 |M_WR_MO_CNT |parameter |32 |Master write outstanding count.
@@ -362,11 +373,6 @@ supported by the design: [.monospaced]#++AOU_RX_CORE_IN_MUX++# requires
 ([.monospaced]#++I_FDI_PL_1_*++#, [.monospaced]#++O_FDI_LP_1_*++#) and the [.monospaced]#++I_PHY_TYPE++# selector to both
 [.monospaced]#++AOU_TOP++# and [.monospaced]#++AOU_CORE_TOP++#. Required for [.monospaced]#++FDI_CFG_TP_*++# values of
 [.monospaced]#++FDI_CONFIG++#.
-|[.monospaced]#pass:c[+define+AOU_TX_NXT_PACKING_EN]# |Selects the alternative TX flit packing
-pipeline in [.monospaced]#++AOU_TX_CORE++#: the next flit chunk is computed from the look-ahead
-packing state and registered before the FDI output mux. Adds one cycle of TX
-latency and shortens the ring-buffer-to-FDI timing path. Off by default (the
-flit data is driven combinationally from the granule ring).
 |=======================================================================
 
 
@@ -1767,7 +1773,8 @@ mux.
 * *AXI Master inputs* (R/B data, READY feedback): Combinational -- feeds
 control logic and FIFO write.
 * *FDI TX outputs* (DATA, VALID, IRDY): Combinational. STALLACK outputs
-are registered.
+are registered. With [.monospaced]#++TX_NXT_PACKING_EN = 1++# the DATA output is driven from
+a register in [.monospaced]#++AOU_TX_CORE++# through the FDI output mux only.
 * *FDI RX inputs*: Combinational -- data/valid pass through an input
 mux. [.monospaced]#++FLIT_CANCEL++# drives both sequential and combinational logic.
 * *Interrupt/control signals*: Combinational.
