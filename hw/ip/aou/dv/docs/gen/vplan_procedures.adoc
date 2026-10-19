@@ -1257,7 +1257,8 @@ stall and its release (FEAT-R15/R16), the vseq WRITE_RESP_DONE once drained.
 +early_over=1 with +early_full=1 (16.17): the env's early-table checker also
 ----
 
-checks O_PENDING_CNT_OVER at the limit (FEAT-R21, white-box; BUGS/005).
+reports INT_EARLY_WDT_ERR while an AW waits at the limit (FEAT-R21 is not
+checked: O_PENDING_CNT_OVER, BUGS/005, was removed by PR #89 for the watchdog).
 
 ----
 +early_toggle=1 (16.14): two traffic phases; between them, with every write
@@ -1321,7 +1322,7 @@ inverted (MAS 3.7.8); the checker judges the second phase by the new value.
 * 16.13: Verify `write_resp_done` bit when no pending writes
 * 16.14: Change `early_bresp_en` when `write_resp_done=1`
 * 16.15: Different `early_bresp_en` per RP
-* 16.17: O_PENDING_CNT_OVER on a write at the early-response limit
+* 16.17: Write kept waiting at the early-response limit (O_PENDING_CNT_OVER removed by PR #89; watchdog INT_EARLY_WDT_ERR observed, not checked)
 
 [[aou-proc-aou_qos_test]]
 ===== 30. `aou_qos_test`
@@ -3047,8 +3048,9 @@ DLENGTH and that every targeted conversion happened.
 Class `aou_dw_down1024_test` extends `aou_dw_test` (`uvm/tests/matrix/aou_dw_test.svh`).
 
 *Purpose.* The 1024-to-256-bit downsizer (plan 14.5) on its own: the remote die is
-1024 bits wide on the 256-bit RPs and 512 bits on the others, so the known
-failures of BUGS/025 (expected_fail.yaml) stay confined to this test.
+1024 bits wide on the 256-bit RPs and 512 bits on the others, so the
+unaligned AWSIZE=6 conversion (tenstorrent/tt-oca-harness-aou#90, fixed by RTL PR #89) is exercised
+here and nowhere else.
 
 *Procedure.* The class's own `run_phase` (see the file).
 

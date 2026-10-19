@@ -392,7 +392,7 @@
 | 16.14 | Change `early_bresp_en` when `write_resp_done=1` | P2 | `aou_early_bresp_test.early_en-0.early_toggle-1.dp_buf_pct-50`, `aou_early_bresp_test.early_en-1.early_toggle-1.dp_buf_pct-50`, `aou_early_bresp_test.early_en-per_rp.early_toggle-1.dp_buf_pct-50`
 | 16.15 | Different `early_bresp_en` per RP | P2 | `aou_early_bresp_test.early_en-per_rp.dp_buf_pct-50`, `aou_early_bresp_test.early_en-per_rp.early_toggle-1.dp_buf_pct-50`
 | 16.16 | B response presented zero cycles after the AW/W handshakes complete (issue 64) | P1 | `aou_dp_b_zero_test`
-| 16.17 | O_PENDING_CNT_OVER on a write at the early-response limit | P2 | `aou_early_bresp_test.early_en-1.early_full-1.early_over-1`
+| 16.17 | Write kept waiting at the early-response limit (O_PENDING_CNT_OVER removed by PR #89; watchdog INT_EARLY_WDT_ERR observed, not checked) | P2 | `aou_early_bresp_test.early_en-1.early_full-1.early_over-1`
 |===
 ==== 2.17 AXI Aggregator Tests
 [cols="1,5,1,4",options="header"]

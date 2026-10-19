@@ -261,8 +261,8 @@ expect_fail = "BUGS/031 (expected_fail.yaml)"
 expect_fail_match = "AXI-R07: B ID|matches no outstanding write"
 
 # The per-RP remote widths put every RP of the 4xmix pair through each of its
-# converters. 1024-bit remote data reaches a 256-bit RP only aligned while
-# BUGS/025 is open, and in aou_dw_down1024_test, which XFAILs on it.
+# converters. 1024-bit remote data reaches a 256-bit RP aligned here and
+# unaligned in aou_dw_down1024_test (tenstorrent/tt-oca-harness-aou#90, fixed by RTL PR #89).
 [[tests]]
 name = "aou_dw_test.remote_bytes-32.4xmix4211-sp128"
 module = { uvm = "aou_dw_test" }
@@ -313,7 +313,6 @@ tags = ["matrix"]
 run_modes = ["matrix"]
 args = ["+remote_bytes=128", "+dp_align=aligned"]
 
-# Known failures: BUGS/025 (expected_fail.yaml)
 [[tests]]
 name = "aou_dw_down1024_test.4xmix4211-sp128"
 module = { uvm = "aou_dw_down1024_test" }
@@ -322,8 +321,6 @@ seed = 1
 reseed = 3
 tags = ["matrix"]
 run_modes = ["matrix"]
-expect_fail = "BUGS/025 (expected_fail.yaml)"
-expect_fail_match = "AXI-S02: remote->local"
 
 [[tests]]
 name = "aou_dw_test.remote_bytes-32.4xmix2144-sp64"
@@ -375,7 +372,6 @@ tags = ["matrix"]
 run_modes = ["matrix"]
 args = ["+remote_bytes=128", "+dp_align=aligned"]
 
-# Known failures: BUGS/025 (expected_fail.yaml)
 [[tests]]
 name = "aou_dw_down1024_test.4xmix2144-sp64"
 module = { uvm = "aou_dw_down1024_test" }
@@ -384,8 +380,6 @@ seed = 1
 reseed = 3
 tags = ["matrix"]
 run_modes = ["matrix"]
-expect_fail = "BUGS/025 (expected_fail.yaml)"
-expect_fail_match = "AXI-S02: remote->local"
 
 [[tests]]
 name = "aou_dw_test.remote_bytes-32.1x256-sp32"
@@ -407,7 +401,6 @@ tags = ["matrix"]
 run_modes = ["matrix"]
 args = ["+remote_bytes=64"]
 
-# Known failures: BUGS/025 (expected_fail.yaml)
 [[tests]]
 name = "aou_dw_down1024_test.1x256-sp32"
 module = { uvm = "aou_dw_down1024_test" }
@@ -416,8 +409,6 @@ seed = 1
 reseed = 2
 tags = ["matrix"]
 run_modes = ["matrix"]
-expect_fail = "BUGS/025 (expected_fail.yaml)"
-expect_fail_match = "AXI-S02: remote->local"
 
 [[tests]]
 name = "aou_dw_test.remote_bytes-32.2xmix-tp64_128"

@@ -31,6 +31,8 @@ _Table 8. AOU_CORE Initial Latency (Cycles)_
 
 The reason of two additional latency for AW and W CH is from WLAST signal generator, and data width converter.
 
+The TX flit packer drives the FDI data path combinationally from the granule ring by default. Building with [.monospaced]#pass:c[+define+AOU_TX_NXT_PACKING_EN]# selects the alternative pipeline in [.monospaced]#++AOU_TX_CORE++#, which computes the next flit chunk from the look-ahead packing state and registers it before the output mux: one additional cycle on every TX path in exchange for a shorter timing path. The figures above are for the default build.
+
 [caption=""]
 .Figure 29. Initial Latency of AOU_CORE with UCIe (Cycle)
 [[figure-29]]
@@ -161,6 +163,7 @@ ifndef::release[]
 |v0.2 |2025/09/19 |Soyoung Min, Jaeyun Lee, Hojun Lee |Kwanho Kim |256, 512, 1024 datawidth verification finished. Early response feature added.
 | |2026/04/09 |Brad Erwin | |Expand explanation of early response feature
 | |2026/04/22 |Tenstorrent | |Refresh with 128B FDI support documentation. New [.monospaced]#++FDI_CONFIG++# parameter (single integer with named constants in [.monospaced]#++RTL/packet_def_pkg.sv++#). FDI ports renamed from [.monospaced]#++_32B++#/[.monospaced]#++_64B++# to [.monospaced]#++_0++#/[.monospaced]#++_1++#; second-PHY ports and [.monospaced]#++I_PHY_TYPE++# are gated by the [.monospaced]#pass:c[+define+TWO_PHY]# build flag. New [.monospaced]#++AOU_TOP++# wrapper introduced (adds [.monospaced]#++AOU_FDI_BRINGUP_CTRL++# for turn-key FDI bringup). New [.monospaced]#++RX_*_FIFO_RS_EN++# parameters control per-channel RX-FIFO output register-slices. [.monospaced]#++RP*_RX_W_FIFO_DEPTH++# / [.monospaced]#++RP*_RX_R_FIFO_DEPTH++# defaults are now FDI-config aware (140 entries for 1024b configurations, 88 otherwise). [.monospaced]#++RP_COUNT++# default changed from 2 to 1.
+| |2026/10/19 |Tenstorrent | |Follow RTL PR #89: write-transaction watchdog ([.monospaced]#++AOU_WRITE_TRANS_WDT++#, [.monospaced]#++INT_EARLY_WDT_ERR++#, [.monospaced]#++WRITE_EARLY_RESPONSE_RPn[17:15]++#, new [.monospaced]#++WRITE_EARLY_RESPONSE_WDT_CTL++# at 0x0080, [.monospaced]#++AOU_INTERRUPT_MASK[9]++#) replaces [.monospaced]#++O_PENDING_CNT_OVER++#; [.monospaced]#++EARLY_ALWAYS_EN++#; [.monospaced]#++SLV_TR_COMPLETE++# waits for early-responded writes; [.monospaced]#++I_MST_BUS_CLEANY_COMPLETE++# / [.monospaced]#++I_SLV_BUS_CLEANY_COMPLETE++# inputs removed; write aggregation requires [.monospaced]#++AWCACHE[1] = 1++# and [.monospaced]#++AWLOCK = 0++# and its W FIFO depth is the [.monospaced]#++RPn_AGG_WCH_FIFO_DEPTH++# parameter; [.monospaced]#pass:c[+define+AOU_TX_NXT_PACKING_EN]# build option.
 |======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
 
 _Table 11. Record of Changes_

@@ -337,20 +337,13 @@ module tb_top;
   assign irq.int_si0_id_mismatch  = status.int_si0_id_mismatch;
   assign irq.int_mi0_id_mismatch  = status.int_mi0_id_mismatch;
   assign irq.int_early_resp_err   = status.int_early_resp_err;
+  assign irq.int_early_wdt_err    = status.int_early_wdt_err;
   assign irq.int_activate_start   = status.int_activate_start;
   assign irq.int_deactivate_start = status.int_deactivate_start;
   assign irq.act_st_disabled      = status.activate_st_disabled;
   assign irq.act_st_enabled       = status.activate_st_enabled;
   assign irq.slv_rid_agg          = u_dut.u_aou_core_top.u_aou_core.O_AXI_SLV_RID_MISMATCH_ERROR;
   assign irq.slv_bid_agg          = u_dut.u_aou_core_top.u_aou_core.O_AXI_SLV_BID_MISMATCH_ERROR;
-  for (genvar r = 0; r < 4; r++) begin : g_pend_over
-    if (r < RP_COUNT) begin : g_on
-      assign irq.pend_over[r] = u_dut.u_aou_core_top.u_aou_core.gen_aou_core_rp[r].u_aou_core_rp
-                                    .u_aou_early_bresp_s_ctrl.O_PENDING_CNT_OVER;
-    end else begin : g_off
-      assign irq.pend_over[r] = 1'b0;
-    end
-  end
 
   AOU_TOP #(
       .RP_COUNT       (RP_COUNT),
@@ -494,11 +487,10 @@ module tb_top;
       .INT_SI0_ID_MISMATCH   (status.int_si0_id_mismatch),
       .INT_MI0_ID_MISMATCH   (status.int_mi0_id_mismatch),
       .INT_EARLY_RESP_ERR    (status.int_early_resp_err),
+      .INT_EARLY_WDT_ERR     (status.int_early_wdt_err),
       .INT_ACTIVATE_START    (status.int_activate_start),
       .INT_DEACTIVATE_START  (status.int_deactivate_start),
 
-      .I_MST_BUS_CLEANY_COMPLETE(1'b1),
-      .I_SLV_BUS_CLEANY_COMPLETE(1'b1),
       .TIEL_DFT_MODESCAN        (rst.dft_modescan)
   );
 

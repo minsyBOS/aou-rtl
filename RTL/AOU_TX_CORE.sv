@@ -1264,7 +1264,7 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
         logic                                w_fdi_pl_0_trdy;
         logic [FDI_IF_WD0-1:0]               w_fdi_lp_0_data;
         logic                                w_fdi_lp_0_valid;
-        logic [FDI_IF_WD0-1:0]               w_flit_fifo_in_data;
+        logic [FDI_IF_WD1-1:0]               w_flit_fifo_in_data;
 
         logic                                w_fdi_pl_1_trdy;
         logic [FDI_IF_WD1-1:0]               w_fdi_lp_1_data;
@@ -1383,6 +1383,14 @@ generate if (FDI_PACK_WD != 1024) begin : g_pack_4step
                 .O_MDATA            ( O_FDI_LP_DATA_0       )
             );
         end else begin : g_sp_64b
+            logic [FDI_IF_WD0-1:0]               w_flit_fifo_in_data;
+
+            `ifdef AOU_TX_NXT_PACKING_EN
+            assign w_flit_fifo_in_data = r_flit_fifo_data;
+            `else
+            assign w_flit_fifo_in_data = w_flit_fifo_data;
+            `endif
+
             AOU_REV_RS #(
                 .DATA_WIDTH         (FDI_IF_WD0)
             ) u_aou_tx_core_phy0_rs

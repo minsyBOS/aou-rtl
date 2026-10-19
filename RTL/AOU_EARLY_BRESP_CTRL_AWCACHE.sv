@@ -114,7 +114,6 @@ logic  [PENDING_CNT_WD-1:0]     r_w_cnt;
 logic                           w_w_last_hs;
 logic                           w_aw_hs;
 logic                           w_b_hs;
-logic                           w_write_aw_credit;
 
 logic                           w_aw_cnt_fifo_sready;
 logic                           w_aw_cnt_fifo_mvalid;
@@ -147,8 +146,6 @@ end
 assign w_w_last_hs = I_AXI_S_WVALID & O_AXI_S_WREADY & I_AXI_S_WLAST;
 assign w_aw_hs     = I_AXI_S_AWVALID & O_AXI_S_AWREADY;
 assign w_b_hs      = I_AXI_M_BVALID & O_AXI_M_BREADY;
-
-assign w_write_aw_credit = (r_aw_cnt > r_w_cnt) || (I_AXI_S_AWVALID && O_AXI_S_AWREADY);
 
 always_ff @ (posedge I_CLK or negedge I_RESETN) begin
     if(~I_RESETN) begin

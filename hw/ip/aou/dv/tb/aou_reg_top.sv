@@ -59,7 +59,7 @@ module aou_reg_top;
   wire [RP_COUNT-1:0][AXI_W/8-1:0] m_wstrb;
   wire [FDI_W-1:0]                lp_data;
   wire                            lp_valid, lp_irdy, lp_stallack;
-  wire [5:0]                      irq;
+  wire [6:0]                      irq;
   wire                            st_disabled, st_enabled, req_linkreset;
 
   AOU_CORE_TOP #(
@@ -175,12 +175,11 @@ module aou_reg_top;
       .INT_SI0_ID_MISMATCH (irq[1]),
       .INT_MI0_ID_MISMATCH (irq[2]),
       .INT_EARLY_RESP_ERR  (irq[3]),
+      .INT_EARLY_WDT_ERR   (irq[6]),
       .INT_ACTIVATE_START  (irq[4]),
       .INT_DEACTIVATE_START(irq[5]),
 
       .I_INT_FSM_IN_ACTIVE      (1'b0),
-      .I_MST_BUS_CLEANY_COMPLETE(1'b1),
-      .I_SLV_BUS_CLEANY_COMPLETE(1'b1),
       .O_AOU_ACTIVATE_ST_DISABLED(st_disabled),
       .O_AOU_ACTIVATE_ST_ENABLED (st_enabled),
       .O_AOU_REQ_LINKRESET       (req_linkreset),

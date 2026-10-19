@@ -366,16 +366,16 @@
 | `aou_dw_test.remote_bytes-128_128_64_64` | `aou_dw_test` | `+remote_bytes=128,128,64,64` | 1-3 | `4xmix4211-sp128` | 14.4,14.6,14.9,14.12,12.18,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-32_128_64_32` | `aou_dw_test` | `+remote_bytes=32,128,64,32` | 1-2 | `4xmix4211-sp128` | 14.2,14.4,14.6,14.7,14.12,14.13,12.18,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-128.dp_align-aligned.4xmix4211-sp128` | `aou_dw_test` | `+remote_bytes=128 +dp_align=aligned` | 1-3 | `4xmix4211-sp128` | 14.5,14.6,14.9,14.12,12.18,14.10,14.11,14.14,14.15,14.16 | 
-| `aou_dw_down1024_test.4xmix4211-sp128` | `aou_dw_down1024_test` |  | 1-3 | `4xmix4211-sp128` | 14.5,14.12,14.10,14.11,14.14,14.15,14.16 | BUGS/025 (expected_fail.yaml)
+| `aou_dw_down1024_test.4xmix4211-sp128` | `aou_dw_down1024_test` |  | 1-3 | `4xmix4211-sp128` | 14.5,14.12,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-32.4xmix2144-sp64` | `aou_dw_test` | `+remote_bytes=32` | 1-3 | `4xmix2144-sp64` | 14.1,14.2,14.7,14.13,12.18,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-64.4xmix2144-sp64` | `aou_dw_test` | `+remote_bytes=64` | 1-3 | `4xmix2144-sp64` | 14.3,14.4,14.8,14.12,14.13,12.18,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-128_64_128_128` | `aou_dw_test` | `+remote_bytes=128,64,128,128` | 1-3 | `4xmix2144-sp64` | 14.4,14.6,14.9,14.12,12.18,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-128_32_32_64` | `aou_dw_test` | `+remote_bytes=128,32,32,64` | 1-2 | `4xmix2144-sp64` | 14.2,14.3,14.6,14.7,14.12,14.13,12.18,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-128.dp_align-aligned.4xmix2144-sp64` | `aou_dw_test` | `+remote_bytes=128 +dp_align=aligned` | 1-3 | `4xmix2144-sp64` | 14.5,14.6,14.9,14.12,12.18,14.10,14.11,14.14,14.15,14.16 | 
-| `aou_dw_down1024_test.4xmix2144-sp64` | `aou_dw_down1024_test` |  | 1-3 | `4xmix2144-sp64` | 14.5,14.12,14.10,14.11,14.14,14.15,14.16 | BUGS/025 (expected_fail.yaml)
+| `aou_dw_down1024_test.4xmix2144-sp64` | `aou_dw_down1024_test` |  | 1-3 | `4xmix2144-sp64` | 14.5,14.12,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-32.1x256-sp32` | `aou_dw_test` | `+remote_bytes=32` | 1-2 | `1x256-sp32` | 14.7,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-64.1x256-sp32` | `aou_dw_test` | `+remote_bytes=64` | 1-2 | `1x256-sp32` | 14.4,14.12,14.10,14.11,14.14,14.15,14.16,18.1 | 
-| `aou_dw_down1024_test.1x256-sp32` | `aou_dw_down1024_test` |  | 1-2 | `1x256-sp32` | 14.5,14.12,14.10,14.11,14.14,14.15,14.16 | BUGS/025 (expected_fail.yaml)
+| `aou_dw_down1024_test.1x256-sp32` | `aou_dw_down1024_test` |  | 1-2 | `1x256-sp32` | 14.5,14.12,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-32.2xmix-tp64_128` | `aou_dw_test` | `+remote_bytes=32` | 1-2 | `2xmix-tp64_128` | 14.1,14.2,14.13,12.18,14.10,14.11,14.14,14.15,14.16 | 
 | `aou_dw_test.remote_bytes-64.2xmix-tp64_128` | `aou_dw_test` | `+remote_bytes=64` | 1-2 | `2xmix-tp64_128` | 14.3,14.8,14.13,12.18,14.10,14.11,14.14,14.15,14.16,18.5 | 
 | `aou_dw_test.remote_bytes-128.2xmix-tp64_128` | `aou_dw_test` | `+remote_bytes=128` | 1-2 | `2xmix-tp64_128` | 14.6,14.9,14.12,12.18,14.10,14.11,14.14,14.15,14.16 | 
@@ -472,7 +472,7 @@
 | `aou_dest_rp_test.rtl_asserts-1` | `aou_dest_rp_test` | `+rtl_asserts=1` | 1 | `4x512-sp64-assert` | 11.18 | 
 | `aou_t1_slice_test.rtl_asserts-1.4xmix4211-sp128-assert` | `aou_t1_slice_test` | `+rtl_asserts=1` | 1 | `4xmix4211-sp128-assert` | 11.18 | 
 | `aou_dw_test.remote_bytes-128_128_64_64.rtl_asserts-1` | `aou_dw_test` | `+remote_bytes=128,128,64,64 +rtl_asserts=1` | 1-2 | `4xmix4211-sp128-assert` | 11.18 | 
-| `aou_dw_down1024_test.rtl_asserts-1` | `aou_dw_down1024_test` | `+rtl_asserts=1` | 1 | `4xmix4211-sp128-assert` | 11.18 | BUGS/025 (expected_fail.yaml)
+| `aou_dw_down1024_test.rtl_asserts-1` | `aou_dw_down1024_test` | `+rtl_asserts=1` | 1 | `4xmix4211-sp128-assert` | 11.18 | 
 | `aou_aggregator_test.agg_en-1.dp_size-5.agg_need-32_128.rtl_asserts-1` | `aou_aggregator_test` | `+agg_en=1 +dp_size=5 +agg_need=32:128 +rtl_asserts=1` | 1 | `4xmix4211-sp128-assert` | 11.18 | 
 | `aou_mrp_test.mrp_scn-indep.rtl_asserts-1` | `aou_mrp_test` | `+mrp_scn=indep +rtl_asserts=1` | 1 | `4xmix4211-sp128-assert` | 11.18 | 
 | `aou_t1_slice_test.rtl_asserts-1.2xmix-tp64_128-assert` | `aou_t1_slice_test` | `+rtl_asserts=1` | 1 | `2xmix-tp64_128-assert` | 11.18 | 
