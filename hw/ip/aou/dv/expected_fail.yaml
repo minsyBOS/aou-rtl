@@ -1861,20 +1861,6 @@
   seed_dependent: true
   note: split sub-bursts take the M port past M_RD_MO_CNT (32) outstanding reads
 
-# Exclusive writes with early responses (aou_attr_test +attr_early=1 only).
-- test: aou_attr_test
-  bug: BUGS/055
-  check: 'DP-R07: local->remote: exclusive BRESP 0 at the requester, the subordinate answered BRESP 1'
-  seed_dependent: true
-  note: a bufferable exclusive write gets the early OKAY instead of the subordinate's EXOKAY
-
-- test: aou_attr_test
-  bug: BUGS/055
-  check: 'AXI-S05: remote memory'
-  requires: BUGS/055
-  seed_dependent: true
-  note: the exclusive data the manager was told failed is in the remote memory
-
 # BUGS/053: with AXI_PEER_DIE_MAX_DATA_WD 512 (config 1x512-sp64-p512 only) the RX
 # FIFOs put data bits in place of {RID, RRESP, RLAST} and shift back-pressured
 # WriteData. The entries cannot be scoped to a config, so they name only the

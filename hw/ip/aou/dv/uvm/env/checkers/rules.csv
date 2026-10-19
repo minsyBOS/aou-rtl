@@ -156,8 +156,8 @@ FEAT-R01,aou_split_chk,,DUT,No M-port burst is longer than MAX_AxBURSTLEN+1 beat
 FEAT-R02,aou_split_chk,,DUT,Each inbound burst becomes ceil(beats/(MAX_AxBURSTLEN+1)) M-port bursts; within the limit it passes unsplit,MAS 3.6.2
 FEAT-R03,aou_agg_chk,,DUT,Aggregator enabled: no eligible narrow multi-beat burst reaches the M port (size promoted to the bus width); a write is eligible only when modifiable and not exclusive (AWCACHE[1]=1 and AWLOCK=0; RTL PR #89),MAS 3.8.2/3.8.3
 FEAT-R04,aou_agg_chk,,DUT,Aggregator disabled (or a non-modifiable or exclusive write with it enabled): every such inbound burst reaches the M port with its own address/size/length,MAS 3.8.1/3.8.2
-FEAT-R05,aou_early_bresp_chk,,DUT,EARLY_BRESP_EN=1 and AWCACHE[0]=1: OKAY B at the S port before the remote die completes the write,MAS 3.7.1
-FEAT-R06,aou_early_bresp_chk,,DUT,Early response off or non-bufferable: B at the S port only after the remote die completed the write,MAS 3.7.1
+FEAT-R05,aou_early_bresp_chk,,DUT,EARLY_BRESP_EN=1 and AWCACHE[0]=1 and AWLOCK=0: OKAY B at the S port before the remote die completes the write,MAS 3.7.1
+FEAT-R06,aou_early_bresp_chk,,DUT,Early response off or non-bufferable or exclusive: B at the S port only after the remote die completed the write,MAS 3.7.1
 FEAT-R07,aou_early_bresp_vseq,,DUT,Remote error after an early B: INT_EARLY_RESP_ERR plus WRITE_RESP_ERR_ID_INFO/TYPE_INFO capture; W1C clears all three,MAS 3.7.3; SW op WRITE_EARLY_RESPONSE
 FEAT-R08,aou_lp_mode_vseq,,DUT,Idle FDI flits: continuous with TX_LP_MODE=0; none with TX_LP_MODE=1/threshold 0; periodic heartbeat otherwise,SW op Low Power mode; RDL AOU_CON0
 FEAT-R09,aou_dest_rp_chk,,DUT,AXI messages the DUT sends carry DEST_RP of the local RP,MAS 3.10.2
