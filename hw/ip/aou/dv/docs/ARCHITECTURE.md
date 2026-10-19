@@ -205,8 +205,10 @@ remote-die agent glue in env).
     a read gets `data[]` and `rresp[]` for every beat. Both follow `aou_mem`'s
     error-region and exclusive rules.
   - Fork one call per request. Responses come back out of order across IDs and
-    in call order within an ID, with reads and writes ordered independently. The
-    memory changes when the call returns.
+    in call order within an ID, with reads and writes ordered independently. A
+    write lands on the memory, and is judged by the exclusive monitor, when the
+    call is made (arrival order, as at a subordinate that has accepted AW and
+    W); only its B waits. A read's data is taken when the call returns.
 - **Publishing:** the model writes every response to its `ap`.
 
 `aou_scoreboard` (`aou_env_pkg`) has three analysis imps:
