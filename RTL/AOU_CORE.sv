@@ -1749,6 +1749,7 @@ import packet_def_pkg::*;
             assign  w_err_rid_mismatch_set[j]         = 1'b0;
 
             assign  w_early_bresp_done[j]             = 1'b0;
+            assign  w_early_bresp_wdt_timeout_err[j]  = 1'b0;
             assign  w_bresp_err[j]                    = 1'b0;
             assign  w_bresp_err_type[j]               = 1'b0;
             assign  w_bresp_err_id[j]                 = 1'b0;

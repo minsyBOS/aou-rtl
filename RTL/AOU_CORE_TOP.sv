@@ -845,6 +845,7 @@ import packet_def_pkg::*;
     assign INT_DEACTIVATE_START = w_int_deactivate_start_level;
     assign INT_ACTIVATE_START   = w_int_activate_start_level;
     assign INT_EARLY_RESP_ERR   = w_int_early_resp_err;
+    assign INT_EARLY_WDT_ERR    = w_int_early_wdt_err;
     assign INT_REQ_LINKRESET    = w_int_aou_req_linkreset;
     assign INT_SI0_ID_MISMATCH  = w_axi_slv_rid_mismatch_error || w_axi_slv_bid_mismatch_error;
     assign INT_MI0_ID_MISMATCH  = w_err_info_rid_mismatch_err || w_err_info_split_bid_mismatch_err;
