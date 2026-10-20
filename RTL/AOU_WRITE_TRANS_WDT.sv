@@ -48,7 +48,7 @@ module AOU_WRITE_TRANS_WDT #(
   input  [BOS_PARAM_WR_CNT_WD-1:0]       I_WR_PEND_CNT,
 
   //------------------------------------------------------------
-  // Outputs (I_ACLK domain, sticky until reset)
+  // Outputs (I_ACLK domain, Timeout event pulse; emitted once per reset)
   //------------------------------------------------------------
   output logic                           O_AXI_WR_TRANS_TIMEOUT_ERR
 );
@@ -93,11 +93,11 @@ module AOU_WRITE_TRANS_WDT #(
     if (!I_RESETN_ACLK)
       r_axi_trans_timeout_event <= 1'b0;
     else if (!clr_tmr && timeout_tmr_cnt_en &&
-             !(r_tmr_cnt < I_SFR_WDT_THRESHOLD))
+             (r_tmr_cnt >= I_SFR_WDT_THRESHOLD))
       r_axi_trans_timeout_event <= 1'b1;
   end
 
-  // Both outputs are driven directly by the I_ACLK-domain timeout register.
-  assign O_AXI_WR_TRANS_TIMEOUT_ERR = r_axi_trans_timeout_event;
-
+  // Combinational timeout event.
+  // Captured by the SFR and suppressed by the internal sticky flag.
+  assign O_AXI_WR_TRANS_TIMEOUT_ERR = !clr_tmr && timeout_tmr_cnt_en && (r_tmr_cnt >= I_SFR_WDT_THRESHOLD);
 endmodule : AOU_WRITE_TRANS_WDT

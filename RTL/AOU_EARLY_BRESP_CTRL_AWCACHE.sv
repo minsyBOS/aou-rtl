@@ -115,6 +115,7 @@ logic  [PENDING_CNT_WD-1:0]     r_w_cnt;
 logic                           w_w_last_hs;
 logic                           w_aw_hs;
 logic                           w_b_hs;
+logic                           w_write_aw_credit;
 
 logic                           w_aw_cnt_fifo_sready;
 logic                           w_aw_cnt_fifo_mvalid;
@@ -148,6 +149,8 @@ end
 assign w_w_last_hs = I_AXI_S_WVALID & O_AXI_S_WREADY & I_AXI_S_WLAST;
 assign w_aw_hs     = I_AXI_S_AWVALID & O_AXI_S_AWREADY;
 assign w_b_hs      = I_AXI_M_BVALID & O_AXI_M_BREADY;
+
+assign w_write_aw_credit = (r_aw_cnt > r_w_cnt) || (I_AXI_S_AWVALID && O_AXI_S_AWREADY);
 
 always_ff @ (posedge I_CLK or negedge I_RESETN) begin
     if(~I_RESETN) begin
@@ -274,8 +277,8 @@ assign  O_AXI_M_AWVALID   = r_early_bresp_en ? w_aw_cnt_fifo_sready & (r_aw_cnt 
 assign  O_AXI_M_WDATA     = I_AXI_S_WDATA   ;
 assign  O_AXI_M_WSTRB     = I_AXI_S_WSTRB   ;
 assign  O_AXI_M_WLAST     = I_AXI_S_WLAST   ;
-assign  O_AXI_S_WREADY    = r_early_bresp_en ? I_AXI_M_WREADY & (w_aw_cnt_fifo_mvalid || (I_AXI_S_AWVALID && O_AXI_S_AWREADY)) : I_AXI_M_WREADY ;
-assign  O_AXI_M_WVALID    = r_early_bresp_en ? I_AXI_S_WVALID & (w_aw_cnt_fifo_mvalid || (I_AXI_S_AWVALID && O_AXI_S_AWREADY)) : I_AXI_S_WVALID ;
+assign  O_AXI_S_WREADY    = r_early_bresp_en ? I_AXI_M_WREADY & (w_aw_cnt_fifo_mvalid || (I_AXI_S_AWVALID && O_AXI_S_AWREADY)) : I_AXI_M_WREADY && w_write_aw_credit;
+assign  O_AXI_M_WVALID    = r_early_bresp_en ? I_AXI_S_WVALID & (w_aw_cnt_fifo_mvalid || (I_AXI_S_AWVALID && O_AXI_S_AWREADY)) : I_AXI_S_WVALID && w_write_aw_credit ;
 
 //  B CH ==================================================
 assign  O_AXI_S_BID       = r_early_bresp_en ? w_earlyrsp_valid ? w_early_rsp_id  : w_earlyrsp_consume ? 'd0   : I_AXI_M_BID   : I_AXI_M_BID;  
