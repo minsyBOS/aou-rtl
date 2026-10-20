@@ -300,7 +300,7 @@ The [.monospaced]#++early_go++# flag ensures that for transactions sharing the s
 [[aou-375-write-outstanding-queue-backpressure]]
 ==== 3.7.5. Write-Outstanding Queue Backpressure
 
-The backpressure mechanism described in this section is only active when the early response feature is enabled ([.monospaced]#++EARLY_BRESP_EN = 1++#). When disabled, the module is a transparent pass-through: all AW, W, and B signals are wired directly between the subordinate and manager interfaces with no outstanding-count gating, and write depth is bounded only by whatever the downstream AOU TX datapath can accept.
+The backpressure mechanism described in this section is only active when the early response feature is enabled ([.monospaced]#++EARLY_BRESP_EN = 1++#). When disabled, the module is a pass-through: AW, W, and B signals are wired directly between the subordinate and manager interfaces with no outstanding-count gating, and write depth is bounded only by whatever the downstream AOU TX datapath can accept. The one ordering rule the pass-through keeps is that W data is accepted only for a write whose AW has been accepted (or is accepted in the same cycle): [.monospaced]#++WREADY++# stays low toward a manager that presents a W burst ahead of its AW until the AW arrives (AXI4 A3.3.1 allows a subordinate to wait for [.monospaced]#++AWVALID++# before asserting [.monospaced]#++WREADY++#).
 
 When enabled, the early table has [.monospaced]#++WR_MO_CNT++# entries (default 32, set by the [.monospaced]#++S_WR_MO_CNT++# parameter). Every write that enters the controller \-- bufferable or non-bufferable \-- occupies one table entry from the time WLAST is accepted until the *actual B response* arrives from the remote die and is consumed.
 

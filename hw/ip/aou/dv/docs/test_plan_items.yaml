@@ -655,7 +655,7 @@
 - id: '4.31'
   section: '2.4'
   section_title: Write Transaction Tests
-  title: W data before AW on the S port is accepted
+  title: W data presented before its AW on the S port is accepted once the AW arrives
   priority: P2
   added: AXI4 A3.3.1
   note: Coverage-closure gap analysis 4.3 (decision D9); priority to be reviewed.

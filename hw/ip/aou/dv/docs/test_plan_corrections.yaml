@@ -285,7 +285,7 @@
 - id: '4.31'
   added: 'AXI4 A3.3.1'
   priority: P2
-  title: 'W data before AW on the S port is accepted'
+  title: 'W data presented before its AW on the S port is accepted once the AW arrives'
   note: Coverage-closure gap analysis 4.3 (decision D9); priority to be reviewed.
 - id: '9.15'
   added: 'AoU 6.4.1; BUGS/012'

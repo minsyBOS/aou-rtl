@@ -1032,7 +1032,9 @@ remote die stopped answering writes that already received an early
 OKAY. SW can find the RP by reading
 AOU_CORE.WRITE_EARLY_RESPONSE_RPn.WDT_TRANS_TIMEOUT_ERR; the interrupt is
 cleared by writing pass:[']1pass:['] to that bit and masked with
-AOU_CORE.AOU_INTERRUPT_MASK.INT_EARLY_WDT_MASK (bit 9). See
+AOU_CORE.AOU_INTERRUPT_MASK.INT_EARLY_WDT_MASK (bit 9). The watchdog of an
+RP fires once per reset: after a timeout it does not re-arm until I_RESETN or
+AOU_CON0.AOU_SW_RESET. See
 [.monospaced]#++DOC/MAS/software-operation.adoc++# section 7.2.6 for the recovery
 sequence.
 * *INT_REQ_LINKRESET* An interrupt that occurs when AOU_CORE receives a

@@ -528,7 +528,7 @@ Don't override. Generated from: aou_core
 
 #### wdt_trans_timeout_err field
 
-<p>Write-transaction watchdog expired for RP0: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked.</p>
+<p>Write-transaction watchdog expired for RP0: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked. The watchdog fires once per reset: after a timeout it does not re-arm until I_RESETN or AOU_SW_RESET.</p>
 
 ### axi_error_info0_rp0 register
 
@@ -698,7 +698,7 @@ Don't override. Generated from: aou_core
 
 #### wdt_trans_timeout_err field
 
-<p>Write-transaction watchdog expired for RP1: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked.</p>
+<p>Write-transaction watchdog expired for RP1: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked. The watchdog fires once per reset: after a timeout it does not re-arm until I_RESETN or AOU_SW_RESET.</p>
 
 ### axi_error_info0_rp1 register
 
@@ -868,7 +868,7 @@ Don't override. Generated from: aou_core
 
 #### wdt_trans_timeout_err field
 
-<p>Write-transaction watchdog expired for RP2: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked.</p>
+<p>Write-transaction watchdog expired for RP2: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked. The watchdog fires once per reset: after a timeout it does not re-arm until I_RESETN or AOU_SW_RESET.</p>
 
 ### axi_error_info0_rp2 register
 
@@ -1038,7 +1038,7 @@ Don't override. Generated from: aou_core
 
 #### wdt_trans_timeout_err field
 
-<p>Write-transaction watchdog expired for RP3: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked.</p>
+<p>Write-transaction watchdog expired for RP3: with wdt_en set, no AW or B handshake for wdt_threshold cycles while writes were outstanding (AW accepted, B from the remote die not yet received). Set by HW, write 1 to clear. Raises INT_EARLY_WDT_ERR unless masked. The watchdog fires once per reset: after a timeout it does not re-arm until I_RESETN or AOU_SW_RESET.</p>
 
 ### axi_error_info0_rp3 register
 
@@ -1118,4 +1118,4 @@ Don't override. Generated from: aou_core
 
 #### wdt_threshold field
 
-<p>Watchdog threshold in I_CLK cycles. The watchdog counts cycles without an AW or B handshake while writes are outstanding (AW accepted, B from the remote die not yet received) and restarts on either handshake; reaching the threshold sets wdt_trans_timeout_err. Reset 0xC3500 = 800000 cycles (800 us at 1 GHz).</p>
+<p>Watchdog threshold in I_CLK cycles. The watchdog counts cycles without an AW or B handshake while writes are outstanding (AW accepted, B from the remote die not yet received) and restarts on either handshake; reaching the threshold sets wdt_trans_timeout_err once per reset. Reset 0xC3500 = 800000 cycles (800 us at 1 GHz).</p>

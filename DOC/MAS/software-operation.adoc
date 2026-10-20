@@ -407,7 +407,7 @@ Enable sequence:
 On [.monospaced]#++INT_EARLY_WDT_ERR++#:
 
 1.  Read [.monospaced]#++WRITE_EARLY_RESPONSE_RPn.WDT_TRANS_TIMEOUT_ERR++# of every RP to find the RP whose writes stalled; [.monospaced]#++WRITE_RESP_DONE = 0++# on that RP confirms that writes are still outstanding.
-2.  Write 1 to [.monospaced]#++WDT_TRANS_TIMEOUT_ERR++# to clear the status and the interrupt. The count restarts only on a handshake, so if the remote die stays silent the bit is set again after another [.monospaced]#++WDT_THRESHOLD++# cycles.
+2.  Write 1 to [.monospaced]#++WDT_TRANS_TIMEOUT_ERR++# to clear the status and the interrupt. The watchdog of that RP fires once: after a timeout its timer is held cleared and it does not re-arm until the next reset ([.monospaced]#++I_RESETN++# or [.monospaced]#++AOU_CON0.AOU_SW_RESET++#), so clearing the bit does not by itself restore hang detection. Toggling [.monospaced]#++WDT_EN++# does not re-arm it either.
 3.  Recover the link as for a protocol error: the outstanding writes will not complete, so [.monospaced]#++SLV_TR_COMPLETE++# stays 0 and deactivation cannot finish. Apply [.monospaced]#++AOU_CON0.AOU_SW_RESET++# or request LinkReset as described in xref:aou-736-pm-entry--linkreset--linkdisabled-sequence[Section 7.3.6].
 
 [[aou-73-activation-deactivation-flow]]

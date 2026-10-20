@@ -1080,7 +1080,9 @@ the drain that nothing hangs; xfer_cov.chan_cg shows the ordering happened.
 +chan=wfirst (plan 4.31): local writes only, each W burst presented before
 ----
 
-its AW (AW held back 4-20 cycles, W at once; AXI4 A3.3.1).
+its AW (AW held back 4-20 cycles, W at once; AXI4 A3.3.1). The DUT holds
+WREADY until the AW arrives (MAS 3.7.5), so the check is that nothing
+hangs and the data lands; xfer_cov.chan_cg w_before_aw shows the ordering.
 
 ----
 +chan=ilv (plan 8.14): reads on distinct IDs both ways, the local
@@ -1105,7 +1107,7 @@ both forwards and receives interleaved read data.
 
 *Plan items.*
 
-* 4.31: W data before AW on the S port is accepted
+* 4.31: W data presented before its AW on the S port is accepted once the AW arrives
 * 8.14: Read data beats from different IDs interleaved
 
 [[aou-proc-aou_split_test]]
