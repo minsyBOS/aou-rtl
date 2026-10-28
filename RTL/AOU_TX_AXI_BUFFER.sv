@@ -711,16 +711,16 @@ always_comb begin
 
     case (w_aou_tx_fifo_m_axi_wdlen)
         2'b00 : begin
-            w_writedata_wo_strb_message_byteswap = {MSG_WRF_DATA, I_RP_DEST_RP[w_aou_tx_fifo_m_axi_aw_rp_tmp], 2'b00, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext[255:0], 768'b0, 32'b0};
-            w_writedata_message_byteswap         = {MSG_WR_DATA,  I_RP_DEST_RP[w_aou_tx_fifo_m_axi_aw_rp_tmp], 2'b00, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext[255:0], w_fifo_wstrb_ext[31:0], 768'b0, 96'b0, 24'b0};
+            w_writedata_wo_strb_message_byteswap = {MSG_WRF_DATA, I_RP_DEST_RP[w_aou_tx_fifo_m_axi_w_rp_tmp], 2'b00, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext[255:0], 768'b0, 32'b0};
+            w_writedata_message_byteswap         = {MSG_WR_DATA,  I_RP_DEST_RP[w_aou_tx_fifo_m_axi_w_rp_tmp], 2'b00, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext[255:0], w_fifo_wstrb_ext[31:0], 768'b0, 96'b0, 24'b0};
         end
         2'b01 : begin 
-            w_writedata_wo_strb_message_byteswap = {MSG_WRF_DATA, I_RP_DEST_RP[w_aou_tx_fifo_m_axi_aw_rp_tmp], 2'b01, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext[511:0], 512'b0, 32'b0};
-            w_writedata_message_byteswap         = {MSG_WR_DATA,  I_RP_DEST_RP[w_aou_tx_fifo_m_axi_aw_rp_tmp], 2'b01, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext[511:0], w_fifo_wstrb_ext[63:0], 512'b0, 64'b0, 24'b0};
+            w_writedata_wo_strb_message_byteswap = {MSG_WRF_DATA, I_RP_DEST_RP[w_aou_tx_fifo_m_axi_w_rp_tmp], 2'b01, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext[511:0], 512'b0, 32'b0};
+            w_writedata_message_byteswap         = {MSG_WR_DATA,  I_RP_DEST_RP[w_aou_tx_fifo_m_axi_w_rp_tmp], 2'b01, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext[511:0], w_fifo_wstrb_ext[63:0], 512'b0, 64'b0, 24'b0};
         end
         2'b10 : begin 
-            w_writedata_wo_strb_message_byteswap = {MSG_WRF_DATA, I_RP_DEST_RP[w_aou_tx_fifo_m_axi_aw_rp_tmp], 2'b10, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext, 32'b0};
-            w_writedata_message_byteswap         = {MSG_WR_DATA,  I_RP_DEST_RP[w_aou_tx_fifo_m_axi_aw_rp_tmp], 2'b10, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext, w_fifo_wstrb_ext, 24'b0};
+            w_writedata_wo_strb_message_byteswap = {MSG_WRF_DATA, I_RP_DEST_RP[w_aou_tx_fifo_m_axi_w_rp_tmp], 2'b10, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext, 32'b0};
+            w_writedata_message_byteswap         = {MSG_WR_DATA,  I_RP_DEST_RP[w_aou_tx_fifo_m_axi_w_rp_tmp], 2'b10, 4'b0, w_aou_writedata_prof, w_fifo_wdata_ext, w_fifo_wstrb_ext, 24'b0};
         end
         default : begin
             w_writedata_wo_strb_message_byteswap = '0;
