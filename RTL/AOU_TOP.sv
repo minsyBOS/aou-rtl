@@ -461,6 +461,8 @@ import packet_def_pkg::*;
 
         .RP3_S_RD_MO_CNT           ( RP3_S_RD_MO_CNT              ),
         .RP3_S_WR_MO_CNT           ( RP3_S_WR_MO_CNT              ),
+        .RP3_M_RD_MO_CNT           ( RP3_M_RD_MO_CNT              ),
+        .RP3_M_WR_MO_CNT           ( RP3_M_WR_MO_CNT              ),
 
         .TX_NXT_PACKING_EN         ( TX_NXT_PACKING_EN            )
 
