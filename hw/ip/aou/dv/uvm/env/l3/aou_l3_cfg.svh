@@ -31,20 +31,20 @@ class aou_l3_cfg extends uvm_object;
   // Most credit the DUT may advertise per RP and class (its RX FIFO, MAS 3.9);
   // 0: not known, unchecked (T1-C40).
   int unsigned       dut_max_cred[AOU_RP_MAX][AOU_CC_NUM];
-  // Return RDATA/WRESP credits after our DeactivateAck (MAS CREDIT_MANAGE=1
-  // reading). Off follows v0.7 8.4: no credits after DeactivateAck.
-  bit                resp_credits_after_deact_ack;
-  // A MAS CREDIT_MANAGE=0 partner: our DeactivateReq waits until every DUT
-  // request has been answered (MAS 7.2 DEACTIVATE_START condition 1), and no
-  // credited message follows it (7.3.1). A DUT request that crosses our
-  // DeactivateReq is answered after the next activation (7.3.5).
-  bit                cm0_deact;
   // Our DeactivateReq goes out once our queued messages are sent, with our
   // requests still unanswered; they are answered after the next activation
   // (MAS 7.3.4: a request crossing the partner's DeactivateReq).
   bit                deact_own_open;
-  // PropertyReq of our DeactivateReq (BUGS/010: DEACTIVATE_FORCE on the wire).
+  // PropertyReq of our DeactivateReq. The bench keeps it 0: v0.8 reserves the
+  // bit and defines no reaction to it.
   bit                deact_prop;
+  // AOU_CON0.DEACTIVATE_FORCE (implementation-defined, MAS software-operation
+  // 7.1): when software last started writing it while the DUT could deactivate
+  // (aou_t1_force_deact_chk sets it; -1: never), and how long after that the
+  // DUT's DeactivateReq may follow. Within that window, and only there, a DUT
+  // DeactivateReq may carry the PropertyReq mark the RTL gives a forced one.
+  realtime           force_deact_t = -1;
+  realtime           force_deact_win = 0;
 
   // Link controller.
   bit                auto_activate = 1'b1;   // answer a peer ActivateReq with our own
@@ -64,13 +64,14 @@ class aou_l3_cfg extends uvm_object;
   // Send credited messages once ActivateReq is sent and ActivateAck received
   // (9.2) instead of waiting for ENABLED (8.4).
   bit                send_after_ack_rcvd;
-  // Hold the DUT to AoU v0.8-only expectations whatever the wire format
-  // (+v0p8, aou_t1_env_cfg::v0p8). Today that is the v0.8 4.4 Misc placement on
-  // the DUT's flits: an Activation message alone in its flit (AOU-R6) and at
-  // most 2 other Misc per half-flit (AOU-R7). Off, the DUT is held to v0.7.1:
-  // at most one Activation message per flit, at G0. Our own flits always
-  // follow and are checked against v0.8.
-  bit                v0p8 = 1'b0;
+  // Hold the DUT to the Misc placement rules added after v0.7.1, whatever the
+  // wire format (+v0p9draft, aou_t1_env_cfg::v0p9draft). Today that is 4.4 as
+  // the v0.9 draft words it: an Activation message shares its flit with
+  // nothing but one CrdtGrant after an ActivateReq/Ack or responses after a
+  // DeactivateReq (AOU-R6), and at most 2 other Misc per half-flit (AOU-R7).
+  // Off, the DUT is held to v0.7.1: at most one Activation message per flit,
+  // at G0. Our own flits always follow and are checked against the draft.
+  bit                v0p9draft = 1'b0;
   // v0.8: an out-of-sequence Req/Ack moves the link to ERROR (8.3.3).
   bit                error_state_en = 1'b1;
 
@@ -107,6 +108,11 @@ class aou_l3_cfg extends uvm_object;
 
   function int unsigned peer_count();
     return (peer_rp_count == 0) ? rp_count : peer_rp_count;
+  endfunction
+
+  // A DUT DeactivateReq seen now may carry the forced-deactivation mark.
+  function bit force_deact_window();
+    return force_deact_t >= 0 && $realtime - force_deact_t <= force_deact_win;
   endfunction
 
   // RPs both dies have: the only ones AXI messages may use (MAS 3.10.1).

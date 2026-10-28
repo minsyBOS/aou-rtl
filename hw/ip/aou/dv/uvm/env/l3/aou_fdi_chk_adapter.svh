@@ -18,10 +18,9 @@ class aou_fdi_chk_adapter extends uvm_component;
   bit                        expect_lp_traffic = 1'b1;
   bit                        expect_pl_traffic = 1'b1;
   int unsigned               reports[NCLS];
-  // AOU_CON0.CREDIT_MANAGE (T1 sets it): the deactivation-window reports name the
-  // mode, because which credits and responses may follow DeactivateReq/Ack
-  // depends on it (BUGS/009 for CREDIT_MANAGE=1, BUGS/033 for 0).
-  uvm_reg_field              credit_manage;
+  // The DEACTIVATE_FORCE window (aou_l3_cfg::force_deact_window); null: none.
+  aou_l3_cfg                 l3_cfg;
+  int unsigned               forced_skips;   // forced DeactivateReqs not reported
 
   function new(string name, uvm_component parent);
     super.new(name, parent);
@@ -73,11 +72,19 @@ class aou_fdi_chk_adapter extends uvm_component;
     return d ? "PL(peer->DUT)" : "LP(DUT->peer)";
   endfunction
 
-  function string mode(int unsigned c);
-    if (credit_manage == null || !(c inside {aou_fdi_checker_pkg::VIOL_MSG_ORDER,
-                                             aou_fdi_checker_pkg::VIOL_ADV_ORDER}))
-      return "";
-    return $sformatf(" CREDIT_MANAGE=%0d", credit_manage.get_mirrored_value());
+  // The captured reserved-field finding is the DUT's forced DeactivateReq:
+  // PropertyReq=1 is the RTL's mark of a DEACTIVATE_FORCE deactivation and is
+  // accepted within the force window, when it is the only reserved bit set
+  // (the same rule as aou_unpacker's AOU-R11).
+  function bit forced_deact(bit cap_dir);
+    aou_granule_t g[$];
+    aou_msg_act a;
+    if (l3_cfg == null || cap_dir != 1'b0 || !l3_cfg.force_deact_window()) return 1'b0;
+    // The capture holds the granule in wire byte order; the codec takes it
+    // with its first byte on top.
+    g.push_back(aou_granule_t'({<<8{vif.mon_cb.capture_granule}}));
+    if (!$cast(a, aou_msg_codec::decode(g, l3_cfg.spec_rev))) return 1'b0;
+    return a.forced_deact_mark();
   endfunction
 
   function void build_phase(uvm_phase phase);
@@ -106,12 +113,20 @@ class aou_fdi_chk_adapter extends uvm_component;
           if (vif.mon_cb.capture_valid && int'(vif.mon_cb.capture_code) == c) begin
             cap_dir = vif.mon_cb.capture_dir;
             done[cap_dir] = 1'b1;
-            chk.violation(rule_of(c), get_type_name(),
-                          $sformatf("AOU_FDI_CHECKER %s %s flit#%0d G%0d granule=%010h%s",
-                                    class_name(c), dir_name(cap_dir),
-                                    vif.mon_cb.capture_flit_seq,
-                                    vif.mon_cb.capture_granule_idx,
-                                    vif.mon_cb.capture_granule, mode(c)));
+            if (c == aou_fdi_checker_pkg::VIOL_RSVD_NONZERO && forced_deact(cap_dir)) begin
+              forced_skips++;
+              reports[c]--;
+              `uvm_info(get_type_name(), $sformatf(
+                  "AOU_FDI_CHECKER VIOL_RSVD_NONZERO: forced DeactivateReq, flit#%0d (accepted)",
+                  vif.mon_cb.capture_flit_seq), UVM_MEDIUM)
+            end else begin
+              chk.violation(rule_of(c), get_type_name(),
+                            $sformatf("AOU_FDI_CHECKER %s %s flit#%0d G%0d granule=%010h",
+                                      class_name(c), dir_name(cap_dir),
+                                      vif.mon_cb.capture_flit_seq,
+                                      vif.mon_cb.capture_granule_idx,
+                                      vif.mon_cb.capture_granule));
+            end
           end
           // Classes the capture record doesn't describe get their direction
           // from the per-direction tap, one report per direction.
@@ -119,13 +134,13 @@ class aou_fdi_chk_adapter extends uvm_component;
             if (!done[d] && vif.mon_cb.dir_violation[d][c] === 1'b1) begin
               done[d] = 1'b1;
               chk.violation(rule_of(c), get_type_name(),
-                            $sformatf("AOU_FDI_CHECKER %s %s from flit#%0d%s", class_name(c),
-                                      dir_name(1'(d)), vif.mon_cb.dir_flit_seq[d], mode(c)));
+                            $sformatf("AOU_FDI_CHECKER %s %s from flit#%0d", class_name(c),
+                                      dir_name(1'(d)), vif.mon_cb.dir_flit_seq[d]));
             end
           end
           if (!done[0] && !done[1])
             chk.violation(rule_of(c), get_type_name(),
-                          $sformatf("AOU_FDI_CHECKER %s%s", class_name(c), mode(c)));
+                          $sformatf("AOU_FDI_CHECKER %s", class_name(c)));
         end
       end
       reported |= fresh;

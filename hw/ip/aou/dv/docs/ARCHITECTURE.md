@@ -122,7 +122,7 @@ else keeps the API's names.
 |---|---|---|
 | `env.expect` | `env.expects` | `expect` is a keyword |
 | `program(feature_cfg)` | `program_cfg(aou_t1_feature_cfg)` | `program` is a keyword |
-| `deactivate(who, force, ...)` | `deactivate(who, forced, credit_manage)` | `force` is a keyword |
+| `deactivate(who, force)` | `deactivate(who, forced)` | `force` is a keyword |
 | reset agent on `aou_reset_if` | `aou_t1_reset_agent` on `aou_rst_if` (key `rst`) | PR 80's `aou_reset_if` (since retired) had no clock, so no clocking block |
 | `regs.model` | `aou_t1_reg_env` (extends `aou_reg_env`) adds `model` | `aou_reg_env` calls it `regmodel` |
 
@@ -164,7 +164,7 @@ mark every transaction on the bus in the window `reset_outstanding`; a write tha
 completes in it is lost or landed whatever its response (the reset loses writes
 queued in the core, early-acknowledged ones included, 7.2.5), so the scoreboard
 treats it like an aborted write, and a read that ends with SLVERR counts as aborted
-too (BUGS/015 interim; any other response is checked as usual, and SLVERR on any
+too (MAS 7.3.6 loses the read and defines no response, so the SLVERR is taken from the RTL; any other response is checked as usual, and SLVERR on any
 later transaction is still an error). The DUT sends no response for a
 transaction the reset lost (its RX FIFOs reset with the core), but the managers
 tolerate one: for `stale_window` (10 us) a response on an ID with an aborted
@@ -364,7 +364,7 @@ this API goes through the integrator, because every ported test depends on it.
 | `dbg_chk` | `aou_t1_dbg_fifo_chk`: predicts each RP's response error debug FIFO and checks every debug-window read and pop |
 | `crd_rr`, `early_tbl` | `aou_t1_crd_rr_chk`: round-robin MsgCredit order in a window a test opens (T1-C03); `aou_t1_early_tbl_chk`: early-table backpressure on RPs with EARLY_BRESP_EN (FEAT-R15/R16) |
 | `wdt_chk` | `aou_t1_wdt_chk`: the write-transaction watchdog of every RP, from a model of its count (FEAT-R23 to R28) |
-| `crd_chk` | `aou_t1_crd_flow_chk`: an RP with credit and queued work is not held back by another RP without credit (T1-C01), and the DUT uses the credit it holds (T1-C02) |
+| `crd_chk` | `aou_t1_crd_flow_chk`: an RP with credit and queued work is not held back by another RP without credit (T1-C01), the DUT uses the credit it holds (T1-C02), and no RP with credit that is next in a class's order waits too long for its message (T1-C43) |
 | `vseqr` | `aou_t1_vseqr`: sequencer handles for all of the above, plus `env` |
 
 ### Base virtual sequence (`aou_base_test_seq`)
@@ -375,8 +375,8 @@ Every test's virtual sequence extends this and composes these tasks:
 |---|---|
 | `link_up()` | L2 bringup to Active |
 | `activate(who, order)` | AoU activation: DUT-, remote- or both-initiated (APB `activate_start`, SW pin, or L3), with ordering and timing randomization |
-| `deactivate(who, force, credit_manage)` | orderly or forced deactivation from either side; waits for DISABLED |
-| `program(feature_cfg)` | DUT configuration through the register sequences (split, aggregator, early response, QoS, DEST_RP, LP mode, interrupt masks, error info, time-outs, credit_manage) |
+| `deactivate(who, force)` | orderly or forced deactivation from either side; waits for DISABLED |
+| `program(feature_cfg)` | DUT configuration through the register sequences (split, aggregator, early response, QoS, DEST_RP, LP mode, interrupt masks, error info, time-outs) |
 | `traffic(dir, n, profile)` / `traffic_nb(...)` + `wait_traffic()` | local→remote, remote→local or both; a profile names AXI sequence knobs and timing policies |
 | `pause_traffic()` / `resume_traffic()` | quiesce or resume all traffic sources |
 | `drain(timeout)` | wait until nothing is outstanding anywhere |

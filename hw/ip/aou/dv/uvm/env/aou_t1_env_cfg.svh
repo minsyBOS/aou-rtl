@@ -63,15 +63,14 @@ class aou_t1_env_cfg extends uvm_object;
   // 0 only in a negative test that declares what follows. Drain: it also
   // waits for every response first.
   bit            sw_hold_on_deact = 1'b1;
-  // +v0p8: hold the DUT to expectations that only AoU v0.8 adds (the DUT
-  // implements v0.7.1). Today: the 4.4 Misc placement, AOU-R6 (an Activation
-  // message alone in its flit) and AOU-R7 (at most 2 other Misc per
-  // half-flit). Further v0.8-only DUT checks belong behind the same switch.
-  bit            v0p8;
+  // +v0p9draft: hold the DUT to expectations added after v0.7.1, which the
+  // DUT implements; the peg is the v0.9 draft until that revision is
+  // accepted. Today: the 4.4 Misc placement, AOU-R6 (an Activation message
+  // shares its flit only with one CrdtGrant after an ActivateReq/Ack or with
+  // responses after a DeactivateReq) and AOU-R7 (at most 2 other Misc per
+  // half-flit). Further post-v0.7.1 DUT checks belong behind the same switch.
+  bit            v0p9draft;
   bit            sw_drain_before_deact = 1'b0;
-  // With CREDIT_MANAGE=0 the remote die (L3) deactivates as a MAS partner
-  // would (aou_l3_cfg::cm0_deact); 0 restores the AoU-only remote die.
-  bit            l3_cm0_deact = 1'b1;
   // aou_t1_rx_fifo_chk (T1-C41, T1-L40, T1-L46) and the messages per RP and
   // class it allows past the RX FIFO (register slice, splitter, width converter).
   bit            rx_fifo_chk_en = 1'b1;
@@ -83,6 +82,14 @@ class aou_t1_env_cfg extends uvm_object;
   // all (T1-C02). +crd_block_cycles / +crd_idle_cycles override them.
   int unsigned   crd_block_cycles = 256;
   int unsigned   crd_idle_cycles = 4096;
+  // The per-RP wait of a class (T1-C43): cycles the Adapter takes a beat and
+  // no AXI port holds the DUT back, in which an RP holds credit and work for
+  // the class and is next in its order, without a message of the class on
+  // that RP. The longest wait seen over the stress, link and datapath lists on
+  // every config, with extra seeds of the long-burst and backpressure
+  // scenarios, was about 250 cycles (a WriteResp); most classes stay under 50.
+  // +crd_starve_cycles overrides it.
+  int unsigned   crd_starve_cycles = 500;
 
   // Time-outs in core clock cycles
   int unsigned   link_timeout = 20000;
@@ -112,9 +119,6 @@ class aou_t1_env_cfg extends uvm_object;
     // complete. A real remote die streams W beats; model that buffer as
     // returning WDATA credits on receipt.
     l3_cfg.ret_policy[AOU_CC_WDATA] = AOU_RET_IMMEDIATE;
-    // AOU_CON0.CREDIT_MANAGE resets to 1: response credits continue after
-    // DeactivateAck (MAS 7.3.1; BUGS/009).
-    l3_cfg.resp_credits_after_deact_ack = 1'b1;
     apb_cfg = aou_apb_cfg::type_id::create("apb_cfg");
     local_mem = aou_mem::type_id::create("local_mem");
     remote_cfg = aou_axi_cfg::type_id::create("remote_cfg");
