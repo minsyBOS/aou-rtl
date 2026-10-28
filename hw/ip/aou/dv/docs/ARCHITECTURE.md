@@ -88,8 +88,8 @@ splitter (MAS 3.6), and packs ReadData at the requester's ARSIZE (AoU 5.7).
 Unused RPs repeat RP0's width,
 because the DUT sizes the AXI data ports to the widest of all four parameters;
 a narrower RP uses the low bits of its slot. In two-PHY builds the remote die
-uses one PHY (`+active_phy=P`, random per seed by default) and AOU_FDI_CHECKER is
-not instantiated.
+uses one PHY (`+active_phy=P`, random per seed by default); AOU_FDI_CHECKER
+watches that PHY, and the other PHY's traffic is not checked.
 
 ## Interfaces and config_db names
 
@@ -141,7 +141,7 @@ the DUT's RX FIFOs still hold, and the DEACTIVATE_TIME_OUT_VALUE quiet window;
 `cfg.rx_fifo_chk_en`, `cfg.rx_fifo_slack`), `cfg.remote_rp_count` (the remote die's RP
 count, `+remote_rp_count`), `env.outstanding(why)`, and in the base vseq `inject_mem_error()`, `wait_link()`,
 `wait_l3()`, `write_field()`. Traffic profiles are `aou_t1_traffic_cfg` objects
-(`aou_t1_traffic_cfg::named("rand"|"unaligned"|"b_zero"|"long"|"short"|"narrow"|"stall")`).
+(`aou_t1_traffic_cfg::named("rand"|"unaligned"|"b_zero"|"long"|"short"|"narrow"|"stall"|"low")`).
 `scoreboard.remote_imp` gets the remote managers' completed transactions (L4a
 originated, as this document defines it), not the remote model's responses.
 
@@ -284,10 +284,13 @@ and the sequences in `l3/seq/` (`aou_l3_bad_type_seq`, `aou_l3_rsvd_seq`,
 `aou_l3_overgrant_seq`).
 
 AOU_FDI_CHECKER (`checker/`, copied from bdf498c) is instantiated by the top on
-the DUT's FDI (LP = DUT TX qualified by valid&irdy&trdy, PL = flits to the DUT,
-`FDI_IF_BYTES` = FDI width, `RP_COUNT`, `I_CFG_RP_DEST_RP` = DEST_RP); its
-reporting ports go to an `aou_fdi_checker_if` registered as `"fdi_chk"`, which
-`aou_fdi_chk_adapter` turns into AOU-R* reports.
+the DUT's FDI through `aou_fdi_chk_phy`, one instance per PHY at that PHY's
+width (LP = DUT TX qualified by valid&irdy&trdy, PL = flits to the DUT,
+`FDI_IF_BYTES` = FDI width, `RP_COUNT`, `I_CFG_RP_DEST_RP` = DEST_RP). On a
+two-PHY build the instance on the PHY `I_PHY_TYPE` does not select is held in
+link reset. The selected instance's reporting ports go to the
+`aou_fdi_checker_if` registered as `"fdi_chk"`, which `aou_fdi_chk_adapter`
+turns into AOU-R* reports.
 
 ## The transaction contract
 
